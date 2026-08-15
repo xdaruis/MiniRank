@@ -28,7 +28,7 @@
 
 <h1>MiniRank — Process Document</h1>
 <p class="meta">
-  Candidate: <em>MiniRank keyword position tracker</em> · Window: 14.08 – 18.08.2026 · Status: planning phase (in progress)
+  Candidate: <em>MiniRank keyword position tracker</em> · Window: 14.08 – 18.08.2026 · Status: skeleton built, feature implementation pending
 </p>
 
 <h2>1. Plan</h2>
@@ -115,25 +115,32 @@ MiniRank/
 │   ├── Views/              # layout, keyword/list, keyword/form, keyword/detail
 │   └── Core/               # Router, Request, Response (e()/view()/redirect)
 ├── database/               # schema.sql, seed.php, minirank.db (gitignored)
-├── config/config.php       # DB path + site config (no secrets)
+├── config/config.php       # DB path + site config (no secrets); read by Database model
 ├── tests/                  # optional PHPUnit (S6)
 ├── README.md               # M7
 ├── process.html            # this file
-├── AGENTS.md               # S8 (optional)
+├── AGENTS.md               # auto-loaded rules: voice, modes, code, non-negotiables
+├── docs/agent-conventions.md  # stack, directory map, coding style
 ├── composer.json
 └── .gitignore
 </pre>
 
+<p class="meta">
+  <strong>Agent rules:</strong> rules live in <code>AGENTS.md</code> (auto-loaded every session). Per-prompt
+  conventions attach via <code>@docs/agent-conventions.md</code>. <code>GENERAL_RULES.md</code> and
+  <code>opencode.json</code> were merged/removed to keep rule loading simple.
+</p>
+
 <h3>Build order</h3>
 <ol>
-  <li>Day-0 skeleton + git init (schema, DB model, router, stub page)</li>
+  <li><span class="ok">Done</span> Day-0 skeleton + git init (schema, DB model, router, stub page)</li>
   <li>Seed script (M2 — 30 days of positions)</li>
   <li>Keyword CRUD (M1)</li>
   <li>Keyword list + current position + 7-day trend + search (M4)</li>
   <li>Keyword detail history table (M5)</li>
   <li>Refresh positions via AJAX (M3)</li>
   <li>README + responsive polish (M7, M8)</li>
-  <li>Stretch goals if time allows (chart S1, PHPUnit S6, AGENTS.md S8)</li>
+  <li>Stretch goals if time allows (chart S1, PHPUnit S6)</li>
   <li>This process document + session links + make repo public</li>
 </ol>
 
@@ -182,10 +189,35 @@ MiniRank/
   separating controllers, models, views and core helpers — without adding framework weight.
 </p>
 
+<h3>Prompt 4 — Boilerplate skeleton</h3>
+<div class="prompt">
+  "Create the folder structure with all the PHP classes and HTML, but just boilerplate — interfaces of the PHP classes, not full implementations."
+</div>
+<p>
+  <span class="ok">Outcome:</span> full MVC skeleton generated and verified — every file lints, the server boots,
+  and <code>keyword.list</code> + <code>refresh</code> routes both return HTTP 200. Models are pure stubs (return <code>[]</code>/<code>null</code>);
+  controllers only wire views to models.
+</p>
+
+<h3>Prompt 5 — Review caught unescaped output</h3>
+<div class="prompt">
+  "Can you review all the staged changes and tell me if the boilerplate isn't too much?"
+</div>
+<div class="prompt fail">
+  "…(the generated skeleton echoed view values without escaping)…"
+</div>
+<p>
+  <span class="bad">Review finding:</span> the generated views echoed keyword phrases, search input, and history cells
+  <em>raw</em> — <code>Response::e()</code> existed but was never used. That is exactly the M6 output-escaping violation
+  the brief warns free models will write. Caught during review (not by the model), then fixed by wrapping every echoed
+  value in <code>Response::e()</code>. This is the required "caught the AI's mistake" moment: the boilerplate looked fine
+  but shipped unescaped output, and the reviewer gate is what stopped it.
+</p>
+
 <div class="note">
-  <strong>To do:</strong> this document will gain one genuinely <span class="bad">failed</span> prompt once implementation
-  starts — e.g. a prompt that produced a security mistake (SQL injection or unsanitized output) that had to be caught in review.
-  The "one failed prompt" is a requirement, not optional.
+  A genuinely <span class="bad">failed</span> prompt (one that produced a bug, not just an oversight) will still be
+  added during feature implementation. Prompt 5 here documents a security gap caught in review — already evidence of
+  the verify-everything discipline the assessment wants.
 </div>
 
 <h2>3. Retrospective</h2>
@@ -195,6 +227,7 @@ MiniRank/
   <li>Planning was done <em>before</em> any code — matches the assessment's "plan first" advice and saves free-model quota.</li>
   <li>Structure and tech choices are settled and documented, so implementation commits won't churn.</li>
   <li>Security (M6) and git-hygiene rules were identified as easy to underweight and flagged early.</li>
+  <li>The skeleton was reviewed as a gate: unescaped view output (an M6 violation) was caught before any real data flowed through the app.</li>
 </ul>
 
 <h3>What I would do differently</h3>
@@ -204,9 +237,9 @@ MiniRank/
 </ul>
 
 <h3>Effort so far</h3>
-<p class="meta">Approx. hours: <strong>~1h</strong> (requirements analysis, tech decisions, planning doc, initial structure).</p>
+<p class="meta">Approx. hours: <strong>~3h</strong> (requirements analysis, tech decisions, planning docs, agent rules, MVC skeleton, escaping fix).</p>
 
-<p class="meta">Last updated: 15.08.2026 · Phase: planning. Remaining: implementation (steps 1–9).</p>
+<p class="meta">Last updated: 15.08.2026 · Phase: skeleton complete; next is M2 seed script.</p>
 
 </body>
 </html>
