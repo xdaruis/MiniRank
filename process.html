@@ -152,88 +152,67 @@ MiniRank/
 
 <h2>2. Prompts &amp; fixes</h2>
 
-<p class="meta">
-  Prompts marked <span class="bad">failed</span> are included deliberately — recovering from a bad prompt is part of the assessment.
-</p>
-
 <h3>Session links</h3>
 <ul>
   <li><a href="https://opncd.ai/share/X5snY62n">Planning &amp; requirements analysis (this session)</a> — 15.08.2026</li>
 </ul>
 
-<h3>Prompt 1 — Understanding the requirements</h3>
+<h3>Prompt 1 — Requirements analysis</h3>
 <div class="prompt">
-  "Explain all the mandatory requirements of the app and the stretch goals. Use caveman style."
+  "Explain all the mandatory requirements of the app and the stretch goals."
 </div>
 <p>
   <span class="ok">Outcome:</span> surfaced the 8 must-haves (M1–M8), 8 stretch goals (S1–S8), deliverables,
-  and scoring weights in plain language. Confirmed security (M6) and the "no squashing / no force-push" git rules
-  are easy to underweight — good that they were made explicit early.
+  and scoring weights. Flagged M6 security and the no-squash/no-force-push git rules as easy to underweight.
 </p>
 
-<h3>Prompt 2 — Tech stack decision</h3>
-<div class="prompt">
-  "Which PHP approach should we use — plain PHP, a micro-framework, or a full framework? Which package manager does PHP have? Keep the stack simple to build a working product."
-</div>
-<p>
-  <span class="ok">Outcome:</span> landed on plain PHP (Composer is PHP's package manager), SQLite/PDO, vanilla JS <code>fetch()</code>.
-  The framework choice is deliberately justified in section 1 and will be explained in the write-up, as the brief requires.
-</p>
-
-<h3>Prompt 3 — Project structure</h3>
-<div class="prompt">
-  "The project structure is too flat. Can we have some MVC-style folders instead?"
-</div>
-<p>
-  <span class="ok">Outcome:</span> restructured to a lightweight MVC layout with a <code>public/</code> web root,
-  separating controllers, models, views and core helpers — without adding framework weight.
-</p>
-
-<h3>Prompt 4 — Boilerplate skeleton</h3>
+<h3>Prompt 2 — Generate the scaffold <span class="bad">(failed — caught in review)</span></h3>
 <div class="prompt">
   "Create the folder structure with all the PHP classes and HTML, but just boilerplate — interfaces of the PHP classes, not full implementations."
 </div>
 <p>
-  <span class="ok">Outcome:</span> full MVC skeleton generated and verified — every file lints, the server boots,
-  and <code>keyword.list</code> + <code>refresh</code> routes both return HTTP 200. Models are pure stubs (return <code>[]</code>/<code>null</code>);
-  controllers only wire views to models.
+  <span class="ok">Generated:</span> full MVC skeleton, all files lint, server boots, routes return HTTP 200.
+</p>
+<p>
+  <span class="bad">Mistake 1 — hardcoded DB path:</span> <code>Database::connection()</code> built the SQLite path
+  itself instead of reading it from <code>config/config.php</code>.
+</p>
+<p>
+  <span class="bad">Mistake 2 — no output escaping:</span> every view echoed keyword phrases, search input, and history
+  cells raw. <code>Response::e()</code> existed but was never used — an M6 XSS risk.
+</p>
+<p>
+  <span class="ok">How caught (three checks):</span> (1) manually looked through the files, (2) ran a second
+  "review your own changes" pass with the agent, explicitly told to check the project's security rules, and
+  (3) asked it whether the scaffold was too much code for a boilerplate. The manual look plus the self-review pass
+  surfaced both the hardcoded path and the missing escaping. Lesson: a large generated diff needs more than one
+  check — a manual pass catches what the agent misses, and a self-review pass only works when it's told which rules to check.
+</p>
+<p>
+  <span class="ok">Fix:</span> <code>Database</code> now loads the path from <code>config/config.php</code>;
+  all view output wrapped in <code>Response::e()</code>.
 </p>
 
-<h3>Prompt 5 — Review caught unescaped output</h3>
+<h3>Prompt 3 — Tech stack</h3>
 <div class="prompt">
-  "Can you review all the staged changes and tell me if the boilerplate isn't too much?"
-</div>
-<div class="prompt fail">
-  "…(the generated skeleton echoed view values without escaping)…"
+  "Which PHP approach — plain PHP, a micro-framework, or a full framework? Which package manager does PHP have? Keep the stack simple to build a working product."
 </div>
 <p>
-  <span class="bad">Review finding:</span> the generated views echoed keyword phrases, search input, and history cells
-  <em>raw</em> — <code>Response::e()</code> existed but was never used. That is exactly the M6 output-escaping violation
-  the brief warns free models will write. Caught during review (not by the model), then fixed by wrapping every echoed
-  value in <code>Response::e()</code>. This is the required "caught the AI's mistake" moment: the boilerplate looked fine
-  but shipped unescaped output, and the reviewer gate is what stopped it.
+  <span class="ok">Outcome:</span> plain PHP + SQLite/PDO + vanilla JS <code>fetch()</code>. Rationale in the decisions table above.
 </p>
-
-<div class="note">
-  A genuinely <span class="bad">failed</span> prompt (one that produced a bug, not just an oversight) will still be
-  added during feature implementation. Prompt 5 here documents a security gap caught in review — already evidence of
-  the verify-everything discipline the assessment wants.
-</div>
 
 <h2>3. Retrospective</h2>
 
 <h3>What's going well</h3>
 <ul>
-  <li>Planning was done <em>before</em> any code — matches the assessment's "plan first" advice and saves free-model quota.</li>
-  <li>Structure and tech choices are settled and documented, so implementation commits won't churn.</li>
-  <li>Security (M6) and git-hygiene rules were identified as easy to underweight and flagged early.</li>
-  <li>The skeleton was reviewed as a gate: unescaped view output (an M6 violation) was caught before any real data flowed through the app.</li>
+  <li>Planned <em>before</em> code — matches "plan first" advice, saves free-model quota.</li>
+  <li>Reviewed the scaffold diff as a gate: caught hardcoded DB path + unescaped output (M6) before any data flowed.</li>
 </ul>
 
 <h3>What I would do differently</h3>
 <ul>
-  <li>Ask for the <code>public/</code> web-root separation from the very first skeleton, not after a first draft.</li>
-  <li>Write the final process document incrementally as I go, rather than drafting it late — it's a graded deliverable (10%).</li>
+  <li>Add the <code>public/</code> web-root separation and the escaping rule to AGENTS.md <em>before</em> generating the skeleton, so the model doesn't ship them wrong.</li>
+  <li>Write process.html incrementally as I go rather than in drafts.</li>
 </ul>
 
 <h3>Effort so far</h3>
