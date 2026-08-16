@@ -10,8 +10,9 @@ th { background:#fafafa; }
 button, input, select { font: inherit; padding:.4rem .6rem; }
 .error { color: var(--warn); }
 /* Trend colors */
-.trend-up { color: var(--accent); }
-.trend-down { color: var(--warn); }
+.trend-improved { color: var(--accent); }
+.trend-declined { color: var(--warn); }
+.trend-stable { color: var(--mut); }
 /* Responsive: allow horizontal scroll on small tables */
 @media (max-width:768px) {
   table { display:block; overflow-x:auto; }

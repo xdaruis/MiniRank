@@ -12,8 +12,18 @@ class Keyword
 
     public function all(string $search = ''): array
     {
-        $sql = 'SELECT id, phrase, created_at FROM keywords ORDER BY id';
-        return $this->db->query($sql)->fetchAll();
+        $sql = 'SELECT k.id, k.phrase, k.created_at,
+                       (SELECT p.position FROM positions p
+                         WHERE p.keyword_id = k.id
+                         ORDER BY p.captured_at DESC, p.id DESC LIMIT 1) AS position
+                FROM keywords k
+                WHERE (:search = \'\' OR lower(k.phrase) LIKE lower(:pattern))
+                ORDER BY k.id';
+
+        $stmt = $this->db->prepare($sql);
+        $pattern = '%' . $search . '%';
+        $stmt->execute(['search' => $search, 'pattern' => $pattern]);
+        return $stmt->fetchAll();
     }
 
     public function find(int $id): ?array

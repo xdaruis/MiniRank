@@ -16,11 +16,13 @@
     </tr>
   </thead>
   <tbody id="keyword-rows">
-    <?php foreach ($keywords as $k): ?>
+    <?php foreach ($keywords as $k): $t = $trend($k['id']); ?>
       <tr data-keyword-id="<?php echo \App\Core\Response::e((string) $k['id']); ?>">
         <td><a href="index.php?route=keyword.detail&id=<?php echo \App\Core\Response::e((string) $k['id']); ?>"><?php echo \App\Core\Response::e($k['phrase']); ?></a></td>
         <td class="position"><?php echo \App\Core\Response::e((string) ($k['position'] ?? '-')); ?></td>
-        <td class="trend"><?php echo \App\Core\Response::e($trend($k['id'])); ?></td>
+        <td class="trend trend-<?php echo \App\Core\Response::e($t); ?>">
+          <?php echo \App\Core\Response::e($t === 'improved' ? '▲' : ($t === 'declined' ? '▼' : '=')); ?>
+        </td>
         <td>
           <a href="index.php?route=keyword.edit&id=<?php echo \App\Core\Response::e((string) $k['id']); ?>">Edit</a>
           <form method="post" action="index.php?route=keyword.delete" onsubmit="return confirm('Delete this keyword?')">
