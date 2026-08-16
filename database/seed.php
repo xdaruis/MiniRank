@@ -4,10 +4,52 @@ declare(strict_types=1);
 
 require __DIR__ . '/../app/bootstrap.php';
 
-// TODO: CLI seed script.
-// - create ~5 demo keywords
-// - for each, generate ~30 days of daily positions via random walk (1-100)
-// - include a row for "today" so list/detail always have current data
-// - idempotent: delete existing keywords (cascade) then reseed
+use App\Models\Database;
 
-echo "Seed script not implemented yet.\n";
+$db = Database::connection();
+
+$db->exec(file_get_contents(__DIR__ . '/schema.sql'));
+
+$db->beginTransaction();
+
+$db->exec('DELETE FROM keywords');
+
+$insertKeyword = $db->prepare('INSERT INTO keywords (phrase) VALUES (:phrase)');
+$insertPosition = $db->prepare(
+    'INSERT INTO positions (keyword_id, position, captured_at) VALUES (:keyword_id, :position, :captured_at)'
+);
+
+$keywordsConfig = [
+    ['phrase' => 'best pizza berlin',                'drift' => 0,  'amp' => 2, 'start' => 40],
+    ['phrase' => 'pizza delivery berlin mitte',      'drift' => -1, 'amp' => 2, 'start' => 12],
+    ['phrase' => 'wood fired pizza neukölln',        'drift' => -2, 'amp' => 2, 'start' => 6],
+    ['phrase' => 'italian restaurant open late berlin', 'drift' => 0, 'amp' => 4, 'start' => 25],
+    ['phrase' => 'neapolitan pizza near me',         'drift' => 2,  'amp' => 3, 'start' => 15],
+];
+
+$days = 30;
+$today = date('Y-m-d');
+$countedPositions = 0;
+
+foreach ($keywordsConfig as $config) {
+    $insertKeyword->execute(['phrase' => $config['phrase']]);
+    $keywordId = (int) $db->lastInsertId();
+
+    $position = $config['start'];
+    for ($i = 0; $i < $days; $i++) {
+        $date = date('Y-m-d', strtotime($today . " - " . ($days - 1 - $i) . " days"));
+        $position = min(100, max(1, $position + $config['drift'] + random_int(-$config['amp'], $config['amp'])));
+        $insertPosition->execute([
+            'keyword_id' => $keywordId,
+            'position'   => $position,
+            'captured_at' => $date,
+        ]);
+        $countedPositions++;
+    }
+}
+
+$db->commit();
+
+$keywordCount = (int) $db->query('SELECT COUNT(*) FROM keywords')->fetchColumn();
+
+echo "Seed complete: {$keywordCount} keywords, {$countedPositions} positions over {$days} days ending {$today}.\n";
