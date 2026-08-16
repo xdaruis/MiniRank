@@ -8,6 +8,7 @@ table { border-collapse: collapse; width:100%; margin:1rem 0; }
 th, td { border:1px solid var(--line); padding:.5rem .6rem; text-align:left; }
 th { background:#fafafa; }
 button, input, select { font: inherit; padding:.4rem .6rem; }
+.error { color: var(--warn); }
 /* Trend colors */
 .trend-up { color: var(--accent); }
 .trend-down { color: var(--warn); }

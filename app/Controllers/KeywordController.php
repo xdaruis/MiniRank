@@ -36,8 +36,31 @@ class KeywordController
     public function add(Request $request): void
     {
         if ($request->isPost()) {
-            $this->keyword->create((string) $request->post('phrase'));
-            Response::redirect('index.php?route=keyword.list');
+            $phrase = trim((string) $request->post('phrase'));
+
+            if ($phrase === '') {
+                Response::view('layout', ['content' => fn () => Response::view('keyword/form', [
+                    'keyword' => null,
+                    'action' => 'keyword.add',
+                    'error' => 'Phrase is required.',
+                ])]);
+                return;
+            }
+
+            try {
+                $this->keyword->create($phrase);
+                Response::redirect('index.php?route=keyword.list');
+            } catch (\PDOException $e) {
+                if ($e->getCode() === '23000') {
+                    Response::view('layout', ['content' => fn () => Response::view('keyword/form', [
+                        'keyword' => ['phrase' => $phrase],
+                        'action' => 'keyword.add',
+                        'error' => 'A keyword with this phrase already exists.',
+                    ])]);
+                    return;
+                }
+                throw $e;
+            }
         }
 
         Response::view('layout', ['content' => fn () => Response::view('keyword/form', [
@@ -51,12 +74,41 @@ class KeywordController
         $id = (int) $request->query('id');
 
         if ($request->isPost()) {
-            $this->keyword->update($id, (string) $request->post('phrase'));
+            $phrase = trim((string) $request->post('phrase'));
+
+            if ($phrase === '') {
+                $keyword = $this->keyword->find($id);
+                Response::view('layout', ['content' => fn () => Response::view('keyword/form', [
+                    'keyword' => $keyword,
+                    'action' => 'keyword.edit&id=' . $id,
+                    'error' => 'Phrase is required.',
+                ])]);
+                return;
+            }
+
+            try {
+                $this->keyword->update($id, $phrase);
+                Response::redirect('index.php?route=keyword.list');
+            } catch (\PDOException $e) {
+                if ($e->getCode() === '23000') {
+                    Response::view('layout', ['content' => fn () => Response::view('keyword/form', [
+                        'keyword' => ['id' => $id, 'phrase' => $phrase],
+                        'action' => 'keyword.edit&id=' . $id,
+                        'error' => 'A keyword with this phrase already exists.',
+                    ])]);
+                    return;
+                }
+                throw $e;
+            }
+        }
+
+        $keyword = $this->keyword->find($id);
+        if ($keyword === null) {
             Response::redirect('index.php?route=keyword.list');
         }
 
         Response::view('layout', ['content' => fn () => Response::view('keyword/form', [
-            'keyword' => $this->keyword->find($id),
+            'keyword' => $keyword,
             'action' => 'keyword.edit&id=' . $id,
         ])]);
     }
