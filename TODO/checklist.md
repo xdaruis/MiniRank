@@ -20,7 +20,7 @@ Ordered top to bottom. `[ ]` unsolved, `[x]` solved. Optional tasks interleaved 
 ## Optional stretch (interleaved)
 
 - [x] **S4 Filter list** — OPTIONAL — filter by position range or movement; slots into list view after M4.
-- [ ] **S1 Line chart** — OPTIONAL — hand-rolled inline SVG on detail page, no dependency.
+- [x] **S1 Line chart** — OPTIONAL — hand-rolled inline SVG on detail page, no dependency.
 - [ ] **S5 CSV export** — OPTIONAL — export a keyword's position history; endpoint off detail page.
 - [ ] **S7 Docker** — OPTIONAL — `docker compose up` starts app + SQLite; complements M7.
 - [ ] **S2 Multi-project/websites** — OPTIONAL — adds project entity; restructures M1/M2, largest optional.

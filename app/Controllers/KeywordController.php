@@ -180,6 +180,7 @@ class KeywordController
 
         Response::view('layout', ['content' => fn () => Response::view('keyword/detail', [
             'keyword' => $keyword,
+            'position' => $this->position->current($id),
             'history' => $this->position->history($id),
         ])]);
     }
