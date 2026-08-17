@@ -8,7 +8,7 @@
 <div class="d-flex align-items-center gap-3 mb-3">
   <h2 class="mb-0"><?php echo \App\Core\Response::e($keyword['phrase']); ?></h2>
   <?php if (!empty($position)): ?>
-    <span class="badge text-bg-success fs-6">Position <?php echo \App\Core\Response::e((string) $position); ?></span>
+    <span class="badge text-bg-success fs-6" title="1 = top result">Position <?php echo \App\Core\Response::e((string) $position); ?></span>
   <?php endif; ?>
   <a class="btn btn-sm btn-outline-secondary ms-auto" href="index.php?route=keyword.export&id=<?php echo \App\Core\Response::e((string) $keyword['id']); ?>">Export CSV</a>
 </div>
@@ -35,7 +35,7 @@
         <?php foreach ($history as $row): ?>
           <tr>
             <td><?php echo \App\Core\Response::e((string) $row['captured_at']); ?></td>
-            <td><?php echo \App\Core\Response::e((string) $row['position']); ?></td>
+            <td class="<?php echo (int) $row['position'] <= 10 ? 'pos-good' : ''; ?>"><?php echo \App\Core\Response::e((string) $row['position']); ?></td>
           </tr>
         <?php endforeach; ?>
       </tbody>

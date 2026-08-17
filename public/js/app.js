@@ -10,7 +10,9 @@
       rows.forEach(({ keyword_id, position, trend }) => {
         const tr = document.querySelector(`tr[data-keyword-id="${keyword_id}"]`);
         if (!tr) return;
-        tr.querySelector('.position').textContent = position;
+        const pos = tr.querySelector('.position');
+        pos.textContent = position;
+        pos.classList.toggle('pos-good', position <= 10);
         // TODO: Double source of truth — trend -> arrow glyph + trend-<label> class is
         // rendered by both list.php (backend) and here (frontend). Duplicated logic can
         // drift and becomes a maintenance hazard. Consolidate to one source of truth.

@@ -3,6 +3,9 @@
 .trend-declined { color: var(--bs-danger); font-weight: 600; }
 .trend-stable   { color: var(--bs-secondary); }
 
+/* Top-tier rank (1 = best) */
+.pos-good { color: var(--bs-success); font-weight: 600; }
+
 /* Line chart */
 .chart { width: 100%; height: auto; display: block; }
 .chart-line { fill: none; stroke: #2f6f4f; stroke-width: 2; }
