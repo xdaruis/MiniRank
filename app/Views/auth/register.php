@@ -17,7 +17,8 @@
           </div>
           <div class="mb-4">
             <label for="password" class="form-label">Password</label>
-            <input type="password" id="password" name="password" required class="form-control">
+            <input type="password" id="password" name="password" required minlength="8" class="form-control">
+            <div class="form-text">At least 8 characters</div>
           </div>
           <button type="submit" class="btn btn-primary w-100">Register</button>
         </form>

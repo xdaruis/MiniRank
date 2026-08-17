@@ -62,6 +62,11 @@ class AuthController
                 return;
             }
 
+            if (strlen($password) < 8) {
+                Response::view('layout', ['content' => fn () => Response::view('auth/register', ['error' => 'Password must be at least 8 characters.'])]);
+                return;
+            }
+
             try {
                 $id = $this->user->create($username, $password);
             } catch (\PDOException $e) {
