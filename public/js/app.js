@@ -5,7 +5,9 @@
   btn.addEventListener('click', async () => {
     btn.disabled = true;
     try {
-      const res = await fetch('refresh.php', { method: 'POST' });
+      const body = new FormData();
+      body.append('csrf_token', document.querySelector('meta[name="csrf-token"]')?.content || '');
+      const res = await fetch('refresh.php', { method: 'POST', body });
       const rows = await res.json();
       rows.forEach(({ keyword_id, position, trend }) => {
         const tr = document.querySelector(`tr[data-keyword-id="${keyword_id}"]`);

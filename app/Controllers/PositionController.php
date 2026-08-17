@@ -6,6 +6,7 @@ namespace App\Controllers;
 
 use App\Core\Request;
 use App\Core\Response;
+use App\Core\Csrf;
 use App\Models\Database;
 use App\Models\Keyword;
 use App\Models\Position;
@@ -25,6 +26,11 @@ class PositionController
     {
         if (!$request->isPost()) {
             Response::json(['error' => 'Method not allowed'], 405);
+            return;
+        }
+
+        if (!Csrf::verify((string) $request->post('csrf_token', ''))) {
+            Response::json(['error' => 'Invalid CSRF token'], 403);
             return;
         }
 
