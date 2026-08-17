@@ -9,6 +9,10 @@ class Router
     public function dispatch(Request $request, string $defaultRoute = 'keyword.list'): void
     {
         $route = $request->query('route', $defaultRoute);
+        if (!str_starts_with($route, 'auth.') && Auth::userId() === null) {
+            Response::redirect('index.php?route=auth.login');
+        }
+
         [$controller, $action] = $this->resolve($route);
 
         $controller->{$action}($request);
@@ -18,6 +22,9 @@ class Router
     {
         // Route -> [controllerClass, action]
         $map = [
+            'auth.login' => ['App\\Controllers\\AuthController', 'login'],
+            'auth.register' => ['App\\Controllers\\AuthController', 'register'],
+            'auth.logout' => ['App\\Controllers\\AuthController', 'logout'],
             'keyword.list' => ['App\\Controllers\\KeywordController', 'list'],
             'keyword.add' => ['App\\Controllers\\KeywordController', 'add'],
             'keyword.edit' => ['App\\Controllers\\KeywordController', 'edit'],
