@@ -28,7 +28,7 @@
 
 <h1>MiniRank — Process Document</h1>
 <p class="meta">
-  Candidate: <em>MiniRank keyword position tracker</em> · Window: 14.08 – 18.08.2026 · Status: M1–M5 complete
+  Candidate: <em>MiniRank keyword position tracker</em> · Window: 14.08 – 18.08.2026 · Status: M1–M5, M8 + S4, S1, S5 done; M6 audit + M7 README pending; S2/S3 planned
 </p>
 
 <h2>1. Plan</h2>
@@ -39,6 +39,7 @@
   All ranking data is simulated — no real search engines. It has a keyword list with trends and search,
   a per-keyword history page, a server-side "refresh positions" action delivered over AJAX, and seeded demo
   history covering ~30 days. No login (single user), SQLite database.
+  Planned next: multi-project/websites (S2) + accounts/CSRF (S3) via a User &gt; Project &gt; Keyword model.
 </p>
 
 <h3>Key decisions (and why)</h3>
@@ -139,8 +140,13 @@ MiniRank/
   <li><span class="ok">Done</span> Keyword list + current position + 7-day trend + search (M4)</li>
   <li><span class="ok">Done</span> Keyword detail history table (M5)</li>
   <li><span class="ok">Done</span> Refresh positions via AJAX (M3)</li>
-  <li>README + responsive polish (M7, M8)</li>
-  <li>Stretch goals if time allows (chart S1, PHPUnit S6)</li>
+  <li><span class="ok">Done</span> Responsive + Bootstrap polish (M8)</li>
+  <li><span class="ok">Done</span> Filter list (S4)</li>
+  <li><span class="ok">Done</span> Hand-rolled SVG line chart (S1)</li>
+  <li><span class="ok">Done</span> CSV export (S5)</li>
+  <li>M6 security audit pass</li>
+  <li>README (M7)</li>
+  <li>Stretch: multi-project (S2) + accounts/CSRF (S3) planned next; PHPUnit (S6), Docker (S7)</li>
   <li>This process document + session links + make repo public</li>
 </ol>
 
@@ -186,8 +192,7 @@ MiniRank/
 <p>
   <span class="ok">How caught (three checks):</span> (1) manually looked through the files, (2) ran a second
   "review your own changes" pass with the agent, explicitly told to check the project's security rules, and
-  (3) asked it whether the scaffold was too much code for a boilerplate. The manual look plus the self-review pass
-  surfaced both the hardcoded path and the missing escaping. Lesson: a large generated diff needs more than one
+  (3) asked it whether the scaffold was too much code for a boilerplate. Lesson: a large generated diff needs more than one
   check — a manual pass catches what the agent misses, and a self-review pass only works when it's told which rules to check.
 </p>
 <p>
@@ -218,9 +223,55 @@ MiniRank/
   <code>dispatch(new Request(), 'position.refresh')</code> in refresh.php; verified a bare POST now returns JSON.
 </p>
 <p>
-  <span class="ok">Lesson:</span> a thin endpoint that delegates routing inherits the router's defaults — a plausible-looking bug that only
-  shows when you track the actual call path before trusting it. Also flagged that refresh.php can honor an arbitrary <code>?route=</code>;
-  noted as a TODO to force when S2/S3 add more POST actions.
+  <span class="ok">Lesson:</span> a thin endpoint that delegates routing inherits the router's defaults — trace the call path before
+  trusting it. TODO: force refresh.php's route when S2/S3 add more POST actions.
+</p>
+
+<h3>Prompt 5 — Responsive polish with Bootstrap (M8)</h3>
+<div class="prompt">
+  "M8 is responsive; should we use Bootstrap instead of hand CSS? Make it look professional for the demo."
+</div>
+<p>
+  <span class="ok">Outcome:</span> adopted Bootstrap 5.3 CDN — toolbar/table cards, breadcrumb, badges, sticky footer.
+  Chose it for demo polish; cost = external CDN dependency + view markup rewrite.
+</p>
+
+<h3>Prompt 6 — Filter list (S4)</h3>
+<div class="prompt">
+  "S4: filter the keyword list by position range or movement."
+</div>
+<p>
+  <span class="ok">Outcome:</span> single GET form (search + trend select + min/max position + Apply/Reset).
+  Filtering done in PHP to reuse <code>Position::trend</code> rather than duplicate trend logic in SQL.
+</p>
+
+<h3>Prompt 7 — Hand-rolled SVG line chart (S1)</h3>
+<div class="prompt">
+  "S1: hand-rolled inline SVG on the detail page, no dependency."
+</div>
+<p>
+  <span class="bad">Mistake A — chart upside down:</span> the line plotted position 1 (best) at the <em>top</em>, but the axis
+  labels annotated the top with the <em>highest</em> number (100) and the bottom with 1 — labels contradicted the data, so it read
+  upside down. Human caught it; fix = swap edge labels + invert the gridline formula so labels run 1 (top) → 100 (bottom).
+</p>
+<p>
+  <span class="bad">Mistake B — tooltip could not be clicked:</span> first used a native SVG <code>&lt;title&gt;</code>, which
+  browsers show only on <em>hover</em>, never on click. Human pushed back twice. Fix = verify hit-testing, then switch to per-circle
+  <code>data-</code> attrs + an <code>app.js</code> click tooltip. Iterated again for mobile: transparent hit circles, snap-to-nearest tap,
+  flip-below near top, horizontal clamp.
+</p>
+<p><span class="ok">Lesson:</span> verify the interaction is possible before building it (native <code>&lt;title&gt;</code> is hover-only);
+  and check chart labels against where the data physically sits — the line was right, the axis was not.</p>
+
+<h3>Prompt 8 — CSV export (S5)</h3>
+<div class="prompt">
+  "S5: export a keyword's position history; endpoint off the detail page."
+</div>
+<p>
+  <span class="ok">Outcome:</span> <code>keyword.export</code> GET streams Date,Position via <code>fputcsv</code>; ID-based filename;
+  newest-first; invalid id redirects. Fixed a PHP 8.4 deprecation (explicit <code>$escape</code>).
+  <span class="ok">Adjacent fix:</span> the detail badge relied on a <code>position</code> key <code>find()</code> never returns, so it
+  silently never rendered.
 </p>
 
 <h2>3. Retrospective</h2>
@@ -238,10 +289,22 @@ MiniRank/
   <li>Write process.html incrementally as I go rather than in drafts.</li>
 </ul>
 
-<h3>Effort so far</h3>
-<p class="meta">Approx. hours: <strong>~5h</strong> (requirements analysis, tech decisions, planning docs, agent rules, MVC skeleton, escaping fix, seed, CRUD, list/trend/search, detail, AJAX refresh).</p>
+<h3>Agent logic flaws caught by human review</h3>
+<ul>
+  <li><strong>S6 test-ordering reorder was wrong:</strong> I proposed moving S6 (PHPUnit) before S2/S3 to "avoid rewriting tests."
+      Human pointed out S6 tests target seed-bounds + trend logic, which structurally survive the S2 project restructure — so no rewrite,
+      and the reorder added no value. Reverted my own recommendation.</li>
+  <li><strong>Chart tooltip / upside-down axis</strong> — captured in Prompt 7: native <code>&lt;title&gt;</code> can't satisfy
+      "click a dot", and the axis labels contradicted the plotted data.</li>
+</ul>
+<p><span class="ok">Lesson:</span> re-check "avoid rewrite" rationales against the actual contracts before acting on them; verify
+  interaction feasibility and label/data agreement before shipping a visualization.</p>
 
-<p class="meta">Last updated: 16.08.2026 · Phase: M1–M5 complete; next is M7 README + M8 responsive polish.</p>
+<h3>Effort so far</h3>
+<p class="meta">Approx. hours: <strong>~9–10h</strong> (requirements, tech decisions, planning docs, agent rules, MVC skeleton,
+  escaping fix, seed, CRUD, list/trend/search, detail, AJAX refresh, Bootstrap/M8, S4 filter, S1 chart, S5 CSV, S2/S3 planning).</p>
+
+<p class="meta">Last updated: 17.08.2026 · Phase: M1–M5, M8 + S4, S1, S5 done; M6 + M7 pending; next is S2 multi-project + S3 accounts/CSRF.</p>
 
 </body>
 </html>
