@@ -10,6 +10,7 @@
   <?php if (!empty($position)): ?>
     <span class="badge text-bg-success fs-6">Position <?php echo \App\Core\Response::e((string) $position); ?></span>
   <?php endif; ?>
+  <a class="btn btn-sm btn-outline-secondary ms-auto" href="index.php?route=keyword.export&id=<?php echo \App\Core\Response::e((string) $keyword['id']); ?>">Export CSV</a>
 </div>
 
 <?php if (empty($history)): ?>

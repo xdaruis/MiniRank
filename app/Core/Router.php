@@ -23,6 +23,7 @@ class Router
             'keyword.edit' => ['App\\Controllers\\KeywordController', 'edit'],
             'keyword.delete' => ['App\\Controllers\\KeywordController', 'delete'],
             'keyword.detail' => ['App\\Controllers\\KeywordController', 'detail'],
+            'keyword.export' => ['App\\Controllers\\KeywordController', 'export'],
             'position.refresh' => ['App\\Controllers\\PositionController', 'refresh'],
         ];
 

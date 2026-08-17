@@ -167,6 +167,26 @@ class KeywordController
         Response::redirect('index.php?route=keyword.list');
     }
 
+    public function export(Request $request): void
+    {
+        $id = (int) $request->query('id');
+        $keyword = $this->keyword->find($id);
+
+        if ($keyword === null) {
+            Response::redirect('index.php?route=keyword.list');
+        }
+
+        header('Content-Type: text/csv; charset=UTF-8');
+        header('Content-Disposition: attachment; filename="minirank-keyword-' . $id . '-history.csv"');
+
+        $out = fopen('php://output', 'wb');
+        fputcsv($out, ['Date', 'Position'], ',', '"', '');
+        foreach ($this->position->history($id) as $row) {
+            fputcsv($out, [$row['captured_at'], (int) $row['position']], ',', '"', '');
+        }
+        fclose($out);
+    }
+
     public function detail(Request $request): void
     {
         $id = (int) $request->query('id');
