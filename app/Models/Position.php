@@ -12,8 +12,11 @@ class Position
 
     public function history(int $keywordId): array
     {
-        // TODO: SELECT date + position for a keyword, newest first.
-        return [];
+        $stmt = $this->db->prepare(
+            'SELECT captured_at, position FROM positions WHERE keyword_id = :id ORDER BY captured_at DESC, id DESC'
+        );
+        $stmt->execute(['id' => $keywordId]);
+        return $stmt->fetchAll();
     }
 
     public function current(int $keywordId): ?int

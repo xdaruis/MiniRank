@@ -12,7 +12,7 @@ Ordered top to bottom. `[ ]` unsolved, `[x]` solved. Optional tasks interleaved 
 - [x] **M2 Seed script** — MAIN — `database/seed.php`: ~5 keywords, ~30 days random-walk positions 1–100, idempotent. Currently stub.
 - [x] **M1 Keywords CRUD** — MAIN — `Keyword::create/update/delete/find/all` prepared statements; add/edit POST forms, delete POST.
 - [x] **M4 List + trend + search** — MAIN — `Keyword::all($search)` + `Position::current/trend` (7-day: improved=▲/declined=▼/stable==).
-- [ ] **M5 Detail page** — MAIN — `Position::history()` table, newest first, 404 on missing keyword.
+- [x] **M5 Detail page** — MAIN — `Position::history()` table, newest first, 404 on missing keyword.
 - [ ] **M3 Refresh via AJAX** — MAIN — `Position::refreshForToday()` upsert + `PositionController::refresh` JSON + `app.js` fetch updates cells only. Controller currently stub.
 - [ ] **M8 Responsive** — MAIN — verify/complete `style.css` media queries at phone width.
 - [ ] **M7 README** — MAIN — setup, seed command, one-command `php -S localhost:8000 -t public`. Currently 1-line stub.
