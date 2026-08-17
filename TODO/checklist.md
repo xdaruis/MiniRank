@@ -24,7 +24,23 @@ Ordered top to bottom. `[ ]` unsolved, `[x]` solved. Optional tasks interleaved 
 - [x] **S5 CSV export** — OPTIONAL — export a keyword's position history; endpoint off detail page.
 - [ ] **S7 Docker** — OPTIONAL — `docker compose up` starts app + SQLite; complements M7.
 - [ ] **S2 Multi-project/websites** — OPTIONAL — adds project entity; restructures M1/M2, largest optional.
+  - [ ] **S2.1** `schema.sql` — add `users`, `projects`, `keywords.project_id`, `UNIQUE(project_id, phrase)`, `UNIQUE(user_id, domain)`.
+  - [ ] **S2.2** `app/Models/User.php` — `findByEmail`/`create`.
+  - [ ] **S2.3** `app/Models/Project.php` — `userProjects`/`owns`/`firstFor`/`create`.
+  - [ ] **S2.4** `app/Models/Keyword.php` — scope `all($userId,$projectId,$search)`, `idsForUser($userId,$projectId)`, `findOwned($userId,$id)`, project-scoped create/update/delete (+ownership guard).
+  - [ ] **S2.5** `KeywordController` — `Auth::require()`, resolve project from `?project` (`Project::owns`, default `firstFor`), ownership guard on detail/export/edit/delete.
+  - [ ] **S2.6** `PositionController::refresh` — project-scoped (`idsForUser($userId,$projectId)`), active project only.
+  - [ ] **S2.7** `ProjectController` — add project GET/POST (+CSRF), redirect to `keyword.list&project=N`.
+  - [ ] **S2.8** Views — `list.php` project switcher, `form.php` hidden project, `detail.php` project back-link, `project/form.php`.
+  - [ ] **S2.9** `seed.php` — migration guard (rebuild stale `keywords`/`projects`/`users`), demo user + project, 5 keywords under it, print demo creds.
 - [ ] **S3 Accounts + CSRF** — OPTIONAL — hashed passwords, sessions, log in/out, CSRF on forms.
+  - [ ] **S3.1** `app/Core/Auth.php` — session init (HttpOnly + SameSite), `login`/`logout`/`userId`/`user`/`require`, `session_regenerate_id` on login.
+  - [ ] **S3.2** `app/Core/Csrf.php` — `token`/`field`/`verify` (`hash_equals`).
+  - [ ] **S3.3** `AuthController` — `login` GET/POST, `logout` POST, `register` GET/POST (all POSTs +CSRF, `password_hash`).
+  - [ ] **S3.4** `app/Views/auth/login.php` + `auth/register.php`.
+  - [ ] **S3.5** `Router.php` — add `auth.login/logout/register`; protect app routes via `Auth::require()`.
+  - [ ] **S3.6** `layout.php` — conditional nav (login link vs user email + Logout POST, CSRF `<meta>`).
+  - [ ] **S3.7** `app.js` — send CSRF token + project in refresh POST body.
 - [ ] **S6 PHPUnit** — OPTIONAL — `composer.json` + tests for seed bounds and trend logic.
 
 ## Quality + deliverables
