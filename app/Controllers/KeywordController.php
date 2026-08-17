@@ -6,6 +6,7 @@ namespace App\Controllers;
 
 use App\Core\Request;
 use App\Core\Response;
+use App\Core\Csrf;
 use App\Models\Database;
 use App\Models\Keyword;
 use App\Models\Position;
@@ -81,6 +82,10 @@ class KeywordController
     public function add(Request $request): void
     {
         if ($request->isPost()) {
+            if (!Csrf::verify((string) $request->post('csrf_token', ''))) {
+                Response::redirect('index.php?route=keyword.list');
+                return;
+            }
             $phrase = trim((string) $request->post('phrase'));
 
             if ($phrase === '') {
@@ -119,6 +124,10 @@ class KeywordController
         $id = (int) $request->query('id');
 
         if ($request->isPost()) {
+            if (!Csrf::verify((string) $request->post('csrf_token', ''))) {
+                Response::redirect('index.php?route=keyword.list');
+                return;
+            }
             $phrase = trim((string) $request->post('phrase'));
 
             if ($phrase === '') {
@@ -160,7 +169,7 @@ class KeywordController
 
     public function delete(Request $request): void
     {
-        if ($request->isPost()) {
+        if ($request->isPost() && Csrf::verify((string) $request->post('csrf_token', ''))) {
             $this->keyword->delete((int) $request->post('id'));
         }
 

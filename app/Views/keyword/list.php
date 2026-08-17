@@ -53,6 +53,7 @@
               <div class="d-inline-flex gap-1">
                 <a href="index.php?route=keyword.edit&id=<?php echo \App\Core\Response::e((string) $k['id']); ?>" class="btn btn-sm btn-outline-secondary">Edit</a>
                 <form method="post" action="index.php?route=keyword.delete" class="d-inline" onsubmit="return confirm('Delete this keyword?')">
+                  <?php echo \App\Core\Csrf::field(); ?>
                   <input type="hidden" name="id" value="<?php echo \App\Core\Response::e((string) $k['id']); ?>">
                   <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
                 </form>

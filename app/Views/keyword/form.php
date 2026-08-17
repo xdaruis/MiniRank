@@ -5,6 +5,7 @@
 <?php endif; ?>
 
 <form method="post" action="index.php?route=<?php echo \App\Core\Response::e($action); ?>" class="mb-3">
+  <?php echo \App\Core\Csrf::field(); ?>
   <div class="mb-3">
     <label for="phrase" class="form-label">Phrase</label>
     <input type="text" id="phrase" name="phrase" value="<?php echo \App\Core\Response::e($keyword['phrase'] ?? ''); ?>" required class="form-control" style="max-width: 480px;">
