@@ -28,7 +28,7 @@
 
 <h1>MiniRank — Process Document</h1>
 <p class="meta">
-  Candidate: <em>MiniRank keyword position tracker</em> · Window: 14.08 – 18.08.2026 · Status: skeleton built, feature implementation pending
+  Candidate: <em>MiniRank keyword position tracker</em> · Window: 14.08 – 18.08.2026 · Status: M1–M5 complete
 </p>
 
 <h2>1. Plan</h2>
@@ -134,11 +134,11 @@ MiniRank/
 <h3>Build order</h3>
 <ol>
   <li><span class="ok">Done</span> Day-0 skeleton + git init (schema, DB model, router, stub page)</li>
-  <li>Seed script (M2 — 30 days of positions)</li>
-  <li>Keyword CRUD (M1)</li>
-  <li>Keyword list + current position + 7-day trend + search (M4)</li>
-  <li>Keyword detail history table (M5)</li>
-  <li>Refresh positions via AJAX (M3)</li>
+  <li><span class="ok">Done</span> Seed script (M2 — 30 days of positions)</li>
+  <li><span class="ok">Done</span> Keyword CRUD (M1)</li>
+  <li><span class="ok">Done</span> Keyword list + current position + 7-day trend + search (M4)</li>
+  <li><span class="ok">Done</span> Keyword detail history table (M5)</li>
+  <li><span class="ok">Done</span> Refresh positions via AJAX (M3)</li>
   <li>README + responsive polish (M7, M8)</li>
   <li>Stretch goals if time allows (chart S1, PHPUnit S6)</li>
   <li>This process document + session links + make repo public</li>
@@ -148,6 +148,7 @@ MiniRank/
 <p>
   Early in the brief I assumed a flat file layout; restructuring to MVC during planning was cheap (no code written yet).
   Lesson applied: settle the directory structure <em>before</em> any implementation, so later commits don't churn paths.
+  Also: seeded the data (M2) <em>before</em> the CRUD (M1), so the list and detail pages had real rows to render from the start.
 </p>
 
 <h2>2. Prompts &amp; fixes</h2>
@@ -155,7 +156,7 @@ MiniRank/
 <h3>Session links</h3>
 <ul>
   <li><a href="https://opncd.ai/share/X5snY62n">Planning &amp; requirements analysis</a> — 15.08.2026</li>
-  <li><a href="https://opncd.ai/share/vQKMxVQA">M2 seed script + M1 keyword CRUD</a> — 16.08.2026</li>
+  <li><a href="https://opncd.ai/share/vQKMxVQA">Session 2 — M2 seed, M1 CRUD, M4 list/trend/search, M5 detail, M3 refresh AJAX</a> — 16.08.2026</li>
 </ul>
 
 <h3>Prompt 1 — Requirements analysis</h3>
@@ -202,12 +203,33 @@ MiniRank/
   <span class="ok">Outcome:</span> plain PHP + SQLite/PDO + vanilla JS <code>fetch()</code>. Rationale in the decisions table above.
 </p>
 
+<h3>Prompt 4 — Refresh endpoint <span class="bad">(wrong default — caught in planning)</span></h3>
+<div class="prompt">
+  "Implement the M3 refresh AJAX: 'Refresh positions' button POSTs to refresh.php and updates the page without a reload."
+</div>
+<p>
+  <span class="bad">Mistake:</span> <code>refresh.php</code> reused the front controller's <code>Router::dispatch()</code>, whose default route was
+  <code>keyword.list</code>. A bare <code>POST refresh.php</code> (no <code>?route=</code>) silently ran the keyword <em>list</em>, not the
+  refresh action — the endpoint worked by accident of a default.
+</p>
+<p>
+  <span class="ok">How caught:</span> traced refresh.php → <code>Router::dispatch(new Request())</code> and saw the default before wiring any JS.
+  <span class="ok">Fix:</span> gave <code>dispatch()</code> an optional <code>$defaultRoute</code> param and called
+  <code>dispatch(new Request(), 'position.refresh')</code> in refresh.php; verified a bare POST now returns JSON.
+</p>
+<p>
+  <span class="ok">Lesson:</span> a thin endpoint that delegates routing inherits the router's defaults — a plausible-looking bug that only
+  shows when you track the actual call path before trusting it. Also flagged that refresh.php can honor an arbitrary <code>?route=</code>;
+  noted as a TODO to force when S2/S3 add more POST actions.
+</p>
+
 <h2>3. Retrospective</h2>
 
 <h3>What's going well</h3>
 <ul>
   <li>Planned <em>before</em> code — matches "plan first" advice, saves free-model quota.</li>
   <li>Reviewed the scaffold diff as a gate: caught hardcoded DB path + unescaped output (M6) before any data flowed.</li>
+  <li>Verification checked rendered output, not just HTTP 200 — caught the M4 trend-arrow CSS-class mismatch by searching emitted class names.</li>
 </ul>
 
 <h3>What I would do differently</h3>
@@ -217,9 +239,9 @@ MiniRank/
 </ul>
 
 <h3>Effort so far</h3>
-<p class="meta">Approx. hours: <strong>~3h</strong> (requirements analysis, tech decisions, planning docs, agent rules, MVC skeleton, escaping fix).</p>
+<p class="meta">Approx. hours: <strong>~5h</strong> (requirements analysis, tech decisions, planning docs, agent rules, MVC skeleton, escaping fix, seed, CRUD, list/trend/search, detail, AJAX refresh).</p>
 
-<p class="meta">Last updated: 16.08.2026 · Phase: M2 seed + M1 CRUD done; next is M4 keyword list (current position, trend, search).</p>
+<p class="meta">Last updated: 16.08.2026 · Phase: M1–M5 complete; next is M7 README + M8 responsive polish.</p>
 
 </body>
 </html>
