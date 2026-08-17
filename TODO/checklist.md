@@ -14,7 +14,7 @@ Ordered top to bottom. `[ ]` unsolved, `[x]` solved. Optional tasks interleaved 
 - [x] **M4 List + trend + search** — MAIN — `Keyword::all($search)` + `Position::current/trend` (7-day: improved=▲/declined=▼/stable==).
 - [x] **M5 Detail page** — MAIN — `Position::history()` table, newest first, 404 on missing keyword.
 - [x] **M3 Refresh via AJAX** — MAIN — `Position::refreshForToday()` upsert + `PositionController::refresh` JSON + `app.js` fetch updates cells only. Controller currently stub.
-- [ ] **M8 Responsive** — MAIN — verify/complete `style.css` media queries at phone width.
+- [x] **M8 Responsive** — MAIN — verify/complete `style.css` media queries at phone width.
 - [ ] **M7 README** — MAIN — setup, seed command, one-command `php -S localhost:8000 -t public`. Currently 1-line stub.
 
 ## Optional stretch (interleaved)
