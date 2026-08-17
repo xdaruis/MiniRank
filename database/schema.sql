@@ -1,6 +1,13 @@
 -- MiniRank schema (SQLite)
 -- Run once at setup; the app creates tables if absent.
 
+CREATE TABLE IF NOT EXISTS users (
+    id            INTEGER PRIMARY KEY AUTOINCREMENT,
+    username      TEXT NOT NULL UNIQUE,
+    password_hash TEXT NOT NULL,
+    created_at    TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
 CREATE TABLE IF NOT EXISTS keywords (
     id         INTEGER PRIMARY KEY AUTOINCREMENT,
     phrase     TEXT NOT NULL UNIQUE,
