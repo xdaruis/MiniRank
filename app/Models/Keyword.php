@@ -26,6 +26,11 @@ class Keyword
         return $stmt->fetchAll();
     }
 
+    public function ids(): array
+    {
+        return $this->db->query('SELECT id FROM keywords')->fetchAll();
+    }
+
     public function find(int $id): ?array
     {
         $stmt = $this->db->prepare('SELECT id, phrase, created_at FROM keywords WHERE id = :id');

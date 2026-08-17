@@ -8,14 +8,17 @@ use App\Core\Request;
 use App\Core\Response;
 use App\Models\Database;
 use App\Models\Keyword;
+use App\Models\Position;
 
 class PositionController
 {
     private Keyword $keyword;
+    private Position $position;
 
-    public function __construct(?Keyword $keyword = null)
+    public function __construct(?Keyword $keyword = null, ?Position $position = null)
     {
         $this->keyword = $keyword ?? new Keyword(Database::connection());
+        $this->position = $position ?? new Position(Database::connection());
     }
 
     public function refresh(Request $request): void
@@ -25,8 +28,10 @@ class PositionController
             return;
         }
 
-        // TODO: for each keyword, call Position::refreshForToday() and collect results.
         $results = [];
+        foreach ($this->keyword->ids() as $keyword) {
+            $results[] = $this->position->refreshForToday((int) $keyword['id']);
+        }
 
         Response::json($results);
     }

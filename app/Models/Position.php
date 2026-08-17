@@ -63,6 +63,11 @@ class Position
 
     private function positionOn(int $keywordId, ?string $date, string $order): ?int
     {
+        $allowed = ['DESC', 'ASC'];
+        if (!in_array($order, $allowed, true)) {
+            throw new \InvalidArgumentException('Invalid order');
+        }
+
         $sql = 'SELECT position FROM positions WHERE keyword_id = :id';
         $params = ['id' => $keywordId];
 
@@ -81,7 +86,28 @@ class Position
 
     public function refreshForToday(int $keywordId): array
     {
-        // TODO: generate today's position, upsert, return [position, trend].
-        return ['position' => null, 'trend' => 'stable'];
+        $prev = $this->current($keywordId);
+        if ($prev === null) {
+            $position = random_int(1, 100);
+        } else {
+            $position = min(100, max(1, $prev + random_int(-3, 3)));
+        }
+
+        $stmt = $this->db->prepare(
+            'INSERT INTO positions (keyword_id, position, captured_at)
+             VALUES (:id, :position, :today)
+             ON CONFLICT(keyword_id, captured_at) DO UPDATE SET position = excluded.position'
+        );
+        $stmt->execute([
+            'id' => $keywordId,
+            'position' => $position,
+            'today' => date('Y-m-d'),
+        ]);
+
+        return [
+            'keyword_id' => $keywordId,
+            'position' => $position,
+            'trend' => $this->trend($keywordId),
+        ];
     }
 }

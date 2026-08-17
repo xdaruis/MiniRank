@@ -6,9 +6,9 @@ namespace App\Core;
 
 class Router
 {
-    public function dispatch(Request $request): void
+    public function dispatch(Request $request, string $defaultRoute = 'keyword.list'): void
     {
-        $route = $request->query('route', 'keyword.list');
+        $route = $request->query('route', $defaultRoute);
         [$controller, $action] = $this->resolve($route);
 
         $controller->{$action}($request);
