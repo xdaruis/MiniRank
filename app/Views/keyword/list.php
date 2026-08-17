@@ -1,15 +1,29 @@
-<div class="card mb-4">
+<form method="get" action="index.php" class="card mb-4">
   <div class="card-body d-flex flex-wrap gap-2 align-items-center">
-    <form method="get" action="index.php" class="d-flex gap-2 flex-grow-1" style="max-width:480px;">
-      <input type="hidden" name="route" value="keyword.list">
-      <input type="search" name="q" value="<?php echo \App\Core\Response::e($search); ?>" placeholder="Search keywords" class="form-control">
-      <button type="submit" class="btn btn-outline-secondary">Search</button>
-    </form>
-    <div class="ms-auto d-flex gap-2">
-      <button type="button" id="refresh-positions" class="btn btn-outline-primary">Refresh positions</button>
-      <a href="index.php?route=keyword.add" class="btn btn-success">Add keyword</a>
-    </div>
+    <input type="hidden" name="route" value="keyword.list">
+    <input type="search" name="q" value="<?php echo \App\Core\Response::e($search); ?>" placeholder="Search keywords" class="form-control" style="max-width:220px;">
+    <select name="move" class="form-select" style="max-width:160px;">
+      <option value="">All trends</option>
+      <option value="improved"<?php echo $move === 'improved' ? ' selected' : ''; ?>>Improved ▲</option>
+      <option value="declined"<?php echo $move === 'declined' ? ' selected' : ''; ?>>Declined ▼</option>
+      <option value="stable"<?php echo $move === 'stable' ? ' selected' : ''; ?>>Stable =</option>
+    </select>
+    <label class="d-flex align-items-center gap-1">
+      Min
+      <input type="number" name="pos_min" min="1" max="100" value="<?php echo $pos_min > 0 ? (int) $pos_min : ''; ?>" class="form-control" style="max-width:80px;">
+    </label>
+    <label class="d-flex align-items-center gap-1">
+      Max
+      <input type="number" name="pos_max" min="1" max="100" value="<?php echo $pos_max > 0 ? (int) $pos_max : ''; ?>" class="form-control" style="max-width:80px;">
+    </label>
+    <button type="submit" class="btn btn-outline-primary">Apply</button>
+    <a href="index.php?route=keyword.list" class="btn btn-outline-secondary">Reset</a>
   </div>
+</form>
+
+<div class="d-flex justify-content-end gap-2 mb-3">
+  <button type="button" id="refresh-positions" class="btn btn-primary">Refresh positions</button>
+  <a href="index.php?route=keyword.add" class="btn btn-success">Add keyword</a>
 </div>
 
 <div class="card">
