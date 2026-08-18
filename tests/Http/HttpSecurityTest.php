@@ -61,6 +61,66 @@ class HttpSecurityTest extends HttpTestCase
         $this->assertSame('Invalid CSRF token', json_decode($output, true)['error'] ?? null);
     }
 
+    public function testRefreshWithWrongCsrfReturns403(): void
+    {
+        $user = $this->seedUser();
+        $project = $this->seedProject($user, 'p.example');
+
+        $this->setUpAuth($user);
+        $this->setMethod('POST');
+        $_SESSION['csrf'] = 'real-token';
+        $_POST = ['csrf_token' => 'wrong-token', 'project' => $project];
+
+        ob_start();
+        $this->runRoute('position.refresh', ['project' => $project]);
+        $output = ob_get_clean();
+
+        $this->assertSame(403, http_response_code());
+        $this->assertSame('Invalid CSRF token', json_decode($output, true)['error'] ?? null);
+    }
+
+    public function testRefreshGetReturns405(): void
+    {
+        $user = $this->seedUser();
+        $project = $this->seedProject($user, 'p.example');
+
+        $this->setUpAuth($user);
+        $this->setMethod('GET');
+
+        ob_start();
+        $this->runRoute('position.refresh', ['project' => $project]);
+        $output = ob_get_clean();
+
+        $this->assertSame(405, http_response_code());
+        $this->assertSame('Method not allowed', json_decode($output, true)['error'] ?? null);
+    }
+
+    public function testRefreshSuccessReturnsResultPerKeyword(): void
+    {
+        $user = $this->seedUser();
+        $project = $this->seedProject($user, 'p.example');
+        $this->seedKeyword($project, 'kw one');
+        $this->seedKeyword($project, 'kw two');
+
+        $this->setUpAuth($user);
+        $this->setMethod('POST');
+        $_SESSION['csrf'] = 'valid-token';
+        $_POST = ['csrf_token' => 'valid-token', 'project' => $project];
+
+        ob_start();
+        $this->runRoute('position.refresh', ['project' => $project]);
+        $output = ob_get_clean();
+
+        $this->assertSame(200, http_response_code());
+        $results = json_decode($output, true);
+        $this->assertCount(2, $results);
+        foreach ($results as $result) {
+            $this->assertArrayHasKey('keyword_id', $result);
+            $this->assertArrayHasKey('position', $result);
+            $this->assertArrayHasKey('trend', $result);
+        }
+    }
+
     public function testRefreshCrossProjectReturns404(): void
     {
         $userB = $this->seedUser('bob');
@@ -92,6 +152,24 @@ class HttpSecurityTest extends HttpTestCase
         $this->setMethod('GET');
         $_SESSION['csrf'] = 'valid-token';
         $_POST = ['csrf_token' => 'valid-token', 'id' => $keywordA];
+
+        try {
+            $this->runRoute('keyword.delete', ['project' => $projectA]);
+        } catch (RedirectSignal) {
+        }
+
+        $this->assertTrue($this->keywordExists($keywordA));
+    }
+
+    public function testPostDeleteWithoutCsrfIsNoop(): void
+    {
+        $userA = $this->seedUser('alice');
+        $projectA = $this->seedProject($userA, 'a.example');
+        $keywordA = $this->seedKeyword($projectA, 'alice keyword');
+
+        $this->setUpAuth($userA);
+        $this->setMethod('POST');
+        $_POST = ['id' => $keywordA];
 
         try {
             $this->runRoute('keyword.delete', ['project' => $projectA]);
@@ -140,6 +218,19 @@ class HttpSecurityTest extends HttpTestCase
         }
 
         $this->assertTrue($this->keywordExists($keywordA));
+    }
+
+    public function testUnauthenticatedProtectedRouteRedirectsToLogin(): void
+    {
+        $signal = null;
+        try {
+            $this->runRoute('keyword.list');
+        } catch (RedirectSignal $e) {
+            $signal = $e;
+        }
+
+        $this->assertNotNull($signal);
+        $this->assertStringContainsString('auth.login', $signal->url);
     }
 
     private function keywordExists(int $id): bool

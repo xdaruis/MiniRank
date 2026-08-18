@@ -34,4 +34,14 @@ class UserTest extends TestCase
         $user = new User($this->pdo);
         $this->assertNull($user->findByUsername('nobody'));
     }
+
+    public function testFindReturnsRowByIdOrNull(): void
+    {
+        $user = new User($this->pdo);
+        $id = $user->create('erin', 'secret-pass');
+        $row = $user->find($id);
+        $this->assertNotNull($row);
+        $this->assertSame('erin', $row['username']);
+        $this->assertNull($user->find($id + 999));
+    }
 }

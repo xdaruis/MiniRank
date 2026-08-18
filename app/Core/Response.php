@@ -29,7 +29,7 @@ class Response
     public static function redirect(string $url): void
     {
         header('Location: ' . $url);
-        $abort = self::$abort ?? static fn () => exit();
-        $abort();
+        $abort = self::$abort ?? static fn (string $_url): never => exit();
+        $abort($url);
     }
 }

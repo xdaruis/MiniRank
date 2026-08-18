@@ -29,8 +29,8 @@ abstract class HttpTestCase extends BaseTestCase
         $_SERVER['REQUEST_METHOD'] = 'GET';
         http_response_code(200);
 
-        Response::$abort = static function (): void {
-            throw new RedirectSignal('redirect');
+        Response::$abort = static function (string $url): void {
+            throw new RedirectSignal($url);
         };
     }
 
