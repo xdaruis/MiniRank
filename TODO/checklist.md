@@ -51,6 +51,7 @@ These are not part of the submission scope.
 ### Features
 
 - [ ] **Pagination** — OPTIONAL — `page`/`per_page` on keyword list + position history; index on `positions(keyword_id, captured_at)` already present.
+- [ ] **GitHub Actions** — OPTIONAL — `.github/workflows/tests.yml`: matrix PHP 8.2/8.3, setup-php + sqlite extensions, `composer install`, `vendor/bin/phpunit` on push/PR.
 
 ### Bugs (from code-smell audit)
 
