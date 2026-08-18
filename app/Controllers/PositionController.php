@@ -47,8 +47,16 @@ class PositionController
         }
 
         $results = [];
-        foreach ($this->keyword->idsForUser($userId, $projectId) as $keyword) {
-            $results[] = $this->position->refreshForToday((int) $keyword['id']);
+        $db = Database::connection();
+        $db->beginTransaction();
+        try {
+            foreach ($this->keyword->idsForUser($userId, $projectId) as $keyword) {
+                $results[] = $this->position->refreshForToday((int) $keyword['id']);
+            }
+            $db->commit();
+        } catch (\Throwable $e) {
+            $db->rollBack();
+            throw $e;
         }
 
         Response::json($results);
