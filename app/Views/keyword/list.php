@@ -46,7 +46,7 @@
 
 <div class="card">
   <div class="card-header bg-white">
-    <strong><?php echo \App\Core\Response::e((string) count($keywords)); ?></strong> keywords on <?php echo \App\Core\Response::e($projectDomain); ?>
+    <strong><?php echo \App\Core\Response::e((string) $total); ?></strong> keywords on <?php echo \App\Core\Response::e($projectDomain); ?>
   </div>
   <div class="table-responsive">
     <table class="table table-striped table-hover align-middle mb-0">
@@ -82,3 +82,4 @@
     </table>
   </div>
 </div>
+<?php \App\Core\Response::view('partials/pagination', ['pagination' => $pagination]); ?>

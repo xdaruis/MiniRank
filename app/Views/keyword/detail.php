@@ -16,7 +16,7 @@
 <?php if (empty($history)): ?>
   <p class="text-muted">No position history yet.</p>
 <?php else: ?>
-  <p class="text-muted"><?php echo \App\Core\Response::e((string) count($history)); ?> days of history.</p>
+  <p class="text-muted"><?php echo \App\Core\Response::e((string) $historyTotal); ?> days of history.</p>
 
   <div class="chart-wrap">
     <?php echo \App\Core\Chart::line(array_reverse($history)); ?>
@@ -32,7 +32,7 @@
         </tr>
       </thead>
       <tbody>
-        <?php foreach ($history as $row): ?>
+        <?php foreach ($pageHistory as $row): ?>
           <tr>
             <td><?php echo \App\Core\Response::e((string) $row['captured_at']); ?></td>
             <td class="<?php echo (int) $row['position'] <= 10 ? 'pos-good' : ''; ?>"><?php echo \App\Core\Response::e((string) $row['position']); ?></td>
@@ -41,4 +41,5 @@
       </tbody>
     </table>
   </div>
+  <?php \App\Core\Response::view('partials/pagination', ['pagination' => $pagination]); ?>
 <?php endif; ?>

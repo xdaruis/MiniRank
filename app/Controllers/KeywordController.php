@@ -93,16 +93,37 @@ class KeywordController
             ));
         }
 
+        $total = count($keywords);
+        $perPage = $this->clamp((int) $request->query('per_page', 20), 1, 100);
+        $last = max(1, (int) ceil($total / $perPage));
+        $page = $this->clamp((int) $request->query('page', 1), 1, $last);
+        $keywords = array_slice($keywords, ($page - 1) * $perPage, $perPage);
+
         Response::view('layout', ['content' => fn () => Response::view('keyword/list', [
             'keywords' => $keywords,
             'search' => $search,
             'move' => (string) $request->query('move', ''),
             'pos_min' => (int) $request->query('pos_min', 0),
             'pos_max' => (int) $request->query('pos_max', 0),
+            'total' => $total,
             'projectId' => (int) $project['id'],
             'projectDomain' => (string) $project['domain'],
             'projects' => $ctx['projects'],
             'trend' => fn (int $id) => $this->position->trend($id),
+            'pagination' => [
+                'page' => $page,
+                'per_page' => $perPage,
+                'total' => $total,
+                'last' => $last,
+                'params' => [
+                    'route' => 'keyword.list',
+                    'project' => (int) $project['id'],
+                    'q' => $search,
+                    'move' => (string) $request->query('move', ''),
+                    'pos_min' => (int) $request->query('pos_min', 0),
+                    'pos_max' => (int) $request->query('pos_max', 0),
+                ],
+            ],
         ])]);
     }
 
@@ -291,11 +312,31 @@ class KeywordController
             return;
         }
 
+        $history = $this->position->history($id);
+        $total = count($history);
+        $perPage = $this->clamp((int) $request->query('per_page', 15), 1, 100);
+        $last = max(1, (int) ceil($total / $perPage));
+        $page = $this->clamp((int) $request->query('page', 1), 1, $last);
+        $pageHistory = array_slice($history, ($page - 1) * $perPage, $perPage);
+
         Response::view('layout', ['content' => fn () => Response::view('keyword/detail', [
             'keyword' => $keyword,
             'position' => $this->position->current($id),
-            'history' => $this->position->history($id),
+            'history' => $history,
+            'pageHistory' => $pageHistory,
+            'historyTotal' => $total,
             'projectId' => (int) $project['id'],
+            'pagination' => [
+                'page' => $page,
+                'per_page' => $perPage,
+                'total' => $total,
+                'last' => $last,
+                'params' => [
+                    'route' => 'keyword.detail',
+                    'id' => (int) $id,
+                    'project' => (int) $project['id'],
+                ],
+            ],
         ])]);
     }
 
