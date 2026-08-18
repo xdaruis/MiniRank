@@ -181,7 +181,7 @@ class KeywordController
         }
         $project = $ctx['project'];
         $id = (int) $request->query('id');
-        $keyword = $this->keyword->findOwned($this->userId(), $id);
+        $keyword = $this->keyword->findOwned($this->userId(), $id, (int) $project['id']);
 
         if ($keyword === null) {
             Response::redirect('index.php?route=keyword.list&project=' . $project['id']);
@@ -240,7 +240,7 @@ class KeywordController
 
         if ($request->isPost() && Csrf::verify((string) $request->post('csrf_token', ''))) {
             $postId = (int) $request->post('id');
-            if ($this->keyword->findOwned($this->userId(), $postId) !== null) {
+            if ($this->keyword->findOwned($this->userId(), $postId, (int) $project['id']) !== null) {
                 $this->keyword->delete($postId);
             }
         }
@@ -257,7 +257,7 @@ class KeywordController
         }
         $project = $ctx['project'];
         $id = (int) $request->query('id');
-        $keyword = $this->keyword->findOwned($this->userId(), $id);
+        $keyword = $this->keyword->findOwned($this->userId(), $id, (int) $project['id']);
 
         if ($keyword === null) {
             Response::redirect('index.php?route=keyword.list&project=' . $project['id']);
@@ -283,7 +283,7 @@ class KeywordController
         }
         $project = $ctx['project'];
         $id = (int) $request->query('id');
-        $keyword = $this->keyword->findOwned($this->userId(), $id);
+        $keyword = $this->keyword->findOwned($this->userId(), $id, (int) $project['id']);
 
         if ($keyword === null) {
             http_response_code(404);

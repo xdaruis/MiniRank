@@ -43,14 +43,21 @@ class Keyword
         return $stmt->fetchAll();
     }
 
-    public function findOwned(int $userId, int $id): ?array
+    public function findOwned(int $userId, int $id, ?int $projectId = null): ?array
     {
         $sql = 'SELECT k.id, k.phrase, k.created_at
                 FROM keywords k
                 JOIN projects pr ON pr.id = k.project_id
                 WHERE k.id = :id AND pr.user_id = :user_id';
+        $params = ['id' => $id, 'user_id' => $userId];
+
+        if ($projectId !== null) {
+            $sql .= ' AND k.project_id = :project_id';
+            $params['project_id'] = $projectId;
+        }
+
         $stmt = $this->db->prepare($sql);
-        $stmt->execute(['id' => $id, 'user_id' => $userId]);
+        $stmt->execute($params);
         $row = $stmt->fetch();
         return $row === false ? null : $row;
     }

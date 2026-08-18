@@ -220,6 +220,26 @@ class HttpSecurityTest extends HttpTestCase
         $this->assertTrue($this->keywordExists($keywordA));
     }
 
+    public function testPostDeleteCrossProjectOwnedKeywordIsNoop(): void
+    {
+        $userA = $this->seedUser('alice');
+        $projectA = $this->seedProject($userA, 'a.example');
+        $projectB = $this->seedProject($userA, 'b.example');
+        $keywordB = $this->seedKeyword($projectB, 'other project keyword');
+
+        $this->setUpAuth($userA);
+        $this->setMethod('POST');
+        $_SESSION['csrf'] = 'valid-token';
+        $_POST = ['csrf_token' => 'valid-token', 'id' => $keywordB];
+
+        try {
+            $this->runRoute('keyword.delete', ['project' => $projectA]);
+        } catch (RedirectSignal) {
+        }
+
+        $this->assertTrue($this->keywordExists($keywordB));
+    }
+
     public function testUnauthenticatedProtectedRouteRedirectsToLogin(): void
     {
         $signal = null;
