@@ -51,7 +51,7 @@ These are not part of the submission scope.
 ### Features
 
 - [ ] **Pagination** — OPTIONAL — `page`/`per_page` on keyword list + position history; index on `positions(keyword_id, captured_at)` already present.
-- [ ] **GitHub Actions** — OPTIONAL — `.github/workflows/tests.yml`: matrix PHP 8.2/8.3, setup-php + sqlite extensions, `composer install`, `vendor/bin/phpunit` on push/PR.
+- [x] **GitHub Actions** — OPTIONAL — `.github/workflows/tests.yml`: matrix PHP 8.2/8.3, setup-php + sqlite extensions, `composer install`, `vendor/bin/phpunit` on push/PR.
 
 ### Bugs (from code-smell audit)
 
@@ -68,3 +68,6 @@ These are not part of the submission scope.
 - [x] **M6 Security audit pass** — MAIN — verify every query is prepared, every output escaped, no secrets, all mutations POST. Coveverification encoded in AGENTS.md; live probes passed (SQLi, CSRF, GET-mutation, authz 404, XSS escape). Hardening: `findOwned` project-scoped on edit/detail/export/delete; batch refresh transactional; trend fallback bounded to 7-day window.
 - [x] **process.html** — DELIVERABLE — exists with Plan/Prompts/Retrospective; needs final 3 prompts + hours.
 - [ ] **Repo public + submission** — DELIVERABLE — push, make public at deadline, submit repo + session links by email.
+
+- [x] **Seed expansion** — OPTIONAL — extend `database/seed.php` to add `payload.com`/payload domains and generate 105 keywords (plus `Pagination`, next item).
+- [x] **SQLi + XSS attack tests** — OPTIONAL — add SQL-injection and XSS payload cases to the PHPUnit suite to prove the M6 escaping/prepared-statement invariants under attack input.
