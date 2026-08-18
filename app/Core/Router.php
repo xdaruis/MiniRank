@@ -25,6 +25,7 @@ class Router
             'auth.login' => ['App\\Controllers\\AuthController', 'login'],
             'auth.register' => ['App\\Controllers\\AuthController', 'register'],
             'auth.logout' => ['App\\Controllers\\AuthController', 'logout'],
+            'project.add' => ['App\\Controllers\\ProjectController', 'add'],
             'keyword.list' => ['App\\Controllers\\KeywordController', 'list'],
             'keyword.add' => ['App\\Controllers\\KeywordController', 'add'],
             'keyword.edit' => ['App\\Controllers\\KeywordController', 'edit'],
