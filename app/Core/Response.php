@@ -24,9 +24,12 @@ class Response
         echo json_encode($data);
     }
 
+    public static $abort; // ?callable — test seam; defaults to exit.
+
     public static function redirect(string $url): void
     {
         header('Location: ' . $url);
-        exit;
+        $abort = self::$abort ?? static fn () => exit();
+        $abort();
     }
 }
