@@ -15,7 +15,7 @@ Ordered top to bottom. `[ ]` unsolved, `[x]` solved. Optional tasks interleaved 
 - [x] **M5 Detail page** — MAIN — `Position::history()` table, newest first, 404 on missing keyword.
 - [x] **M3 Refresh via AJAX** — MAIN — `Position::refreshForToday()` upsert + `PositionController::refresh` JSON + `app.js` fetch updates cells only. Controller currently stub.
 - [x] **M8 Responsive** — MAIN — verify/complete `style.css` media queries at phone width.
-- [ ] **M7 README** — MAIN — setup, seed command, one-command `php -S localhost:8000 -t public`. Currently 1-line stub.
+- [x] **M7 README** — MAIN — requirements (PHP ≥8.2 + Composer), macOS/Homebrew + Ubuntu/apt install, `composer install`/`.env`/seed/run/`composer test` commands. Done.
 
 ## Optional stretch (interleaved)
 
@@ -41,10 +41,10 @@ Ordered top to bottom. `[ ]` unsolved, `[x]` solved. Optional tasks interleaved 
   - [x] **S3.5** `Router.php` — add `auth.login/logout/register`; protect app routes via `Auth::require()`.
   - [x] **S3.6** `layout.php` — conditional nav (login link vs username + Logout POST, CSRF `<meta>`).
   - [x] **S3.7** `app.js` — send CSRF token in refresh POST body; refresh.php hardened (direct controller call, JSON 401, 403 on bad CSRF).
-- [ ] **S6 PHPUnit** — OPTIONAL — `composer.json` + tests for seed bounds and trend logic.
+- [x] **S6 PHPUnit** — OPTIONAL — `composer.json` (`phpunit ^11`) + `phpunit.xml` + `tests/` split into `Models/`/`Core/`/`Http/` + `Support/` (autoload-dev, `.env` `DATABASE_PATH` override). Covers security invariants (ownership isolation, CSRF, POST-only mutations), auth flows (login/register/logout), list filters, trend/refresh logic, model edges. 65 tests. Done.
 
 ## Quality + deliverables
 
-- [x] **M6 Security audit pass** — MAIN — verify every query is prepared, every output escaped, no secrets, all mutations POST. Coveverification encoded in AGENTS.md; live probes passed (SQLi, CSRF, GET-mutation, authz 404, XSS escape).
+- [x] **M6 Security audit pass** — MAIN — verify every query is prepared, every output escaped, no secrets, all mutations POST. Coveverification encoded in AGENTS.md; live probes passed (SQLi, CSRF, GET-mutation, authz 404, XSS escape). Hardening: `findOwned` project-scoped on edit/detail/export/delete; batch refresh transactional; trend fallback bounded to 7-day window.
 - [x] **process.html** — DELIVERABLE — exists with Plan/Prompts/Retrospective; needs final 3 prompts + hours.
 - [ ] **Repo public + submission** — DELIVERABLE — push, make public at deadline, submit repo + session links by email.
