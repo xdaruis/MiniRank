@@ -36,8 +36,4 @@ if (!str_starts_with($database, '/')) {
 
 return [
     'database' => $database,
-    'site' => [
-        'name' => 'MiniRank demo site',
-        'url' => 'https://example.com',
-    ],
 ];

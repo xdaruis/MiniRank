@@ -22,7 +22,7 @@ Ordered top to bottom. `[ ]` unsolved, `[x]` solved. Optional tasks interleaved 
 - [x] **S4 Filter list** — OPTIONAL — filter by position range or movement; slots into list view after M4.
 - [x] **S1 Line chart** — OPTIONAL — hand-rolled inline SVG on detail page, no dependency.
 - [x] **S5 CSV export** — OPTIONAL — export a keyword's position history; endpoint off detail page.
-- [x] **S7 Docker** — OPTIONAL — `docker compose up` starts app + SQLite; complements M7. Done. Single `Dockerfile` (dev/prod targets), dev = bind-mount + built-in server (`docker compose up`, port 8000), prod = nginx + php-fpm + one-shot seed (`docker compose -f docker-compose.prod.yml up`, port 8081), SQLite on named volumes, seed only when DB absent.
+- [x] **S7 Docker** — OPTIONAL — `docker compose up` starts app + SQLite; complements M7. Done. Single `Dockerfile` (dev/prod targets), dev = bind-mount + built-in server (`docker compose up`, port 8000), prod = nginx + php-fpm + one-shot seed (`docker compose -f docker-compose.prod.yml up`, port 8081), SQLite on named volumes, dev = always re-seeds on container start, prod = seed only when DB absent.
 - [x] **S2 Multi-project/websites** — OPTIONAL — adds project entity; restructures M1/M2, largest optional. Done.
   - [x] **S2.1** `schema.sql` — add `users`, `projects`, `keywords.project_id`, `UNIQUE(project_id, phrase)`, `UNIQUE(user_id, domain)`.
   - [x] **S2.2** `app/Models/User.php` — username-based `findByUsername`/`create` (done in S3; email variant not used).
@@ -41,7 +41,7 @@ Ordered top to bottom. `[ ]` unsolved, `[x]` solved. Optional tasks interleaved 
   - [x] **S3.5** `Router.php` — add `auth.login/logout/register`; protect app routes via `Auth::require()`.
   - [x] **S3.6** `layout.php` — conditional nav (login link vs username + Logout POST, CSRF `<meta>`).
   - [x] **S3.7** `app.js` — send CSRF token in refresh POST body; refresh.php hardened (direct controller call, JSON 401, 403 on bad CSRF).
-- [x] **S6 PHPUnit** — OPTIONAL — `composer.json` (`phpunit ^11`) + `phpunit.xml` + `tests/` split into `Models/`/`Core/`/`Http/` + `Support/` (autoload-dev, `.env` `DATABASE_PATH` override). Covers security invariants (ownership isolation, CSRF, POST-only mutations), auth flows (login/register/logout), list filters, trend/refresh logic, model edges. 65 tests. Done.
+- [x] **S6 PHPUnit** — OPTIONAL — `composer.json` (`phpunit ^11`) + `phpunit.xml` + `tests/` split into `Models/`/`Core/`/`Http/` + `Support/` (autoload-dev, `.env` `DATABASE_PATH` override). Covers security invariants (ownership isolation, CSRF, POST-only mutations), auth flows (login/register/logout), list filters, trend/refresh logic, model edges. 104 tests. Done.
 
 ## Nice-to-have (OPTIONAL — not required by reviewers)
 
@@ -50,7 +50,8 @@ These are not part of the submission scope.
 
 ### Features
 
-- [ ] **Pagination** — OPTIONAL — `page`/`per_page` on keyword list + position history; index on `positions(keyword_id, captured_at)` already present.
+- [x] **Pagination** — OPTIONAL — `page`/`per_page` on keyword list + position history; index on `positions(keyword_id, captured_at)` already present. Done. Defaults list 20 / history 15; post-filter PHP slice (move/position filters are PHP-side); shared `partials/pagination.php` with First/Last + page-jump form; count deduped. Tests in `tests/Http/PaginationTest.php`.
+- [ ] **Pagination in SQL only** — OPTIONAL — move pagination from the post-filter PHP `array_slice` to `LIMIT`/`OFFSET` at the query layer so only the page's rows are fetched from SQLite. Blocked by the move/position filters running in PHP; needs trend/position filtering pushed into SQL (or a dedicated paginated query). Only matters for larger DBs; current 105-row demo scale is fine.
 - [x] **GitHub Actions** — OPTIONAL — `.github/workflows/tests.yml`: matrix PHP 8.2/8.3, setup-php + sqlite extensions, `composer install`, `vendor/bin/phpunit` on push/PR.
 
 ### Bugs (from code-smell audit)
@@ -62,6 +63,7 @@ These are not part of the submission scope.
 - [ ] **`.env` parser hardening** — strip inline `#` comments/quotes; clarify real-`getenv()` precedence over `.env`.
 - [ ] **Multibyte password length** — `mb_strlen` in register validation (current `strlen` counts bytes).
 - [ ] **Per-request `Auth::user()`** — resolve the user once per request instead of re-querying on each `layout` render.
+- [x] **Dead config + stale doc** — OPTIONAL — remove unused `site` block from `config/config.php` (nothing reads it; sites now live in `projects`); reconcile process.html "Website config" decision row with S2 multi-project. Done.
 
 ## Quality + deliverables
 
@@ -69,5 +71,5 @@ These are not part of the submission scope.
 - [x] **process.html** — DELIVERABLE — exists with Plan/Prompts/Retrospective; needs final 3 prompts + hours.
 - [ ] **Repo public + submission** — DELIVERABLE — push, make public at deadline, submit repo + session links by email.
 
-- [x] **Seed expansion** — OPTIONAL — extend `database/seed.php` to add `payload.com`/payload domains and generate 105 keywords (plus `Pagination`, next item).
+- [x] **Seed expansion** — OPTIONAL — extend `database/seed.php`: add `payload.com` project holding 105 real XSS-payload keywords (real vectors + gibberish-arg variants to reach 105, collision-free); 110 keywords total incl. pizzeria's 5. Corpus doubles as M6 XSS-escaping validation data.
 - [x] **SQLi + XSS attack tests** — OPTIONAL — add SQL-injection and XSS payload cases to the PHPUnit suite to prove the M6 escaping/prepared-statement invariants under attack input.

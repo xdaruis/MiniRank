@@ -86,8 +86,13 @@
     </tr>
     <tr>
       <td>Website config</td>
-      <td>One site hardcoded in config</td>
-      <td>M1 requires a single configured website — no need to model multiple sites.</td>
+      <td>Per-project: <code>projects</code> table, site per user &gt; project</td>
+      <td>
+        M1 starts with one configured website, but S2 stretches that to multiple
+        projects/sites, each with its own keywords. A <code>projects</code> row (owned by
+        a user, keyed by domain) replaced any hardcoded single site — the project
+        switcher drives list/detail/refresh scope.
+      </td>
     </tr>
     <tr>
       <td>Seed pattern</td>
@@ -113,29 +118,34 @@ MiniRank/
 ├── app/
 │   ├── Controllers/        # Keyword, Position, Project, Auth
 │   ├── Models/             # Database, Keyword, Position, Project, User (all SQL here)
-│   ├── Views/              # layout + keyword/, auth/, project/
+│   ├── Views/              # layout + keyword/, auth/, project/, partials/
+│   │   └── partials/       # pagination.php (shared by list + history)
 │   └── Core/               # Router, Request, Response, Auth, Csrf, Chart
 ├── database/               # schema.sql, seed.php, minirank.db (gitignored)
 ├── config/config.php       # env-aware loader: defaults ← .env ← env vars
-├── .env.example            # DATABASE_PATH override template (.env gitignored)
 ├── tests/                  # PHPUnit (S6)
 │   ├── bootstrap.php
 │   ├── Models/  Core/  Http/
 │   └── Support/            # TestCase, HttpTestCase, RedirectSignal
+├── docs/agent-conventions.md  # stack, directory map, coding style
+├── TODO/                   # brief docs (assessment/candidate brief, checklist, plan)
 ├── README.md               # M7
 ├── process.html            # this file
 ├── AGENTS.md               # auto-loaded rules: voice, modes, code, non-negotiables
-├── docs/agent-conventions.md  # stack, directory map, coding style
 ├── composer.json           # phpunit ^11 (dev), autoload-dev for App\Tests
 ├── composer.lock
 ├── phpunit.xml
+├── .env.example            # DATABASE_PATH override template (.env gitignored)
 ├── .gitignore
+├── .dockerignore
 ├── Dockerfile               # S7 multi-target: dev / test / prod
 ├── docker-compose.yml       # dev (built-in server, port 8000)
 ├── docker-compose.prod.yml  # prod (nginx + php-fpm, port 8081)
 ├── docker-compose.test.yml  # dockerized PHPUnit runner
 ├── docker/                  # entrypoint.sh, nginx.conf
-└── .github/workflows/ci.yml # CI: docker compose test on push/PR
+└── .github/
+    └── workflows/
+        └── ci.yml          # CI: docker compose test on push/PR
 </pre>
 
 <p class="meta">
@@ -162,6 +172,10 @@ MiniRank/
   <li><span class="ok">Done</span> README (M7)</li>
   <li><span class="ok">Done</span> Stretch: PHPUnit (S6), Docker (S7) — dev/prod images + dockerized test runner</li>
   <li><span class="ok">Done</span> CI workflow — GitHub Actions runs the dockerized test suite on push/PR</li>
+  <li><span class="ok">Done</span> Seed expansion — payload.com project, 105 XSS-payload keywords (M6 validation corpus)</li>
+  <li><span class="ok">Done</span> SQLi + XSS attack tests — prove prepared-statement + escaping invariants (AttackTest, suite → 104)</li>
+  <li><span class="ok">Done</span> Pagination — list + history, shared partial, First/Last + page-jump</li>
+  <li><span class="ok">Done</span> Dead config + stale doc cleanup — remove unused <code>site</code> block, reconcile Website-config decision row</li>
   <li>This process document + session links + make repo public</li>
 </ol>
 
@@ -182,6 +196,7 @@ MiniRank/
   <li><a href="https://opncd.ai/share/BGqXX2AV">Session 4 — M7 README, S6 PHPUnit suite, behavioral fixes</a> — 18.08.2026</li>
   <li><a href="https://opncd.ai/share/ClZB40ce">Session 5 — S7 Docker (dev/prod images, dockerized tests), README restructure, CI workflow</a> — 18.08.2026</li>
   <li><a href="https://opncd.ai/share/dAToqpkL">Session 6 — optional: seed expansion (payload.com, 105 XSS keywords), SQLi + XSS attack tests, pagination (+ nav First/Last/jump), dev auto-reseed</a> — 18.08.2026</li>
+  <li><a href="https://opncd.ai/share/Wq1D0tCL">Session 7 — review readiness: dead-config + stale-doc cleanup, structure/build-order/retrospective polish</a> — 18.08.2026</li>
 </ul>
 
 <h3>Prompt 1 — Requirements analysis</h3>
@@ -375,34 +390,90 @@ MiniRank/
   failed in the test image until <code>unzip</code> was installed via apt.
 </p>
 
+<h3>Prompt 12 — Seed expansion (payload.com, 105 XSS keywords)</h3>
+<div class="prompt">
+  "Let's plan for the next feature '- [ ] Seed expansion — OPTIONAL — extend database/seed.php to add payload.com/payload domains and generate 105 keywords (plus Pagination, next item).'"
+</div>
+<p>
+  <span class="ok">Outcome:</span> single <code>payload.com</code> project holding 105 unique XSS-payload keyword
+  phrases — real vectors (OWASP/PortSwigger/html5sec classes + encodings) plus deterministic gibberish-arg variants
+  to reach exactly 105, collision-free via array keys + a count assert. Per-keyword drift/amp/start randomized, so the
+  30-day random-walk position generation is unchanged in shape. 110 keywords total (5 pizzeria + 105 payload); summary
+  now reports per-project counts. The corpus doubles as M6 validation data — payloads must render escaped, never execute.
+</p>
+
+<h3>Prompt 13 — Dev container auto-reseed (diagnostic)</h3>
+<div class="prompt">
+  "why my docker dev container doesn't regenerate the db with the seed script?"
+</div>
+<p>
+  <span class="bad">Root cause:</span> the dev container persists SQLite on a named volume
+  <code>db_data</code> at <code>/var/www/data</code>, decoupled from the host <code>database/</code> dir.
+  <code>entrypoint.sh</code> seeded <em>only if</em> the DB file was absent, so the old volume's DB survived
+  <code>down</code>/<code>up</code> and the updated (bind-mounted) <code>seed.php</code> never ran.
+</p>
+<p>
+  <span class="ok">Fix:</span> dev <code>entrypoint.sh</code> now always runs the idempotent seed on container start.
+  Dev-only — prod keeps a separate one-shot <code>seed</code> service and distinct volumes, so it is untouched.
+  Required an image rebuild because <code>entrypoint.sh</code> is <code>COPY</code>'d into the image, not bind-mounted.
+</p>
+<p><span class="ok">Lesson:</span> named volumes survive <code>down</code>/<code>up</code>; a "seed if missing" guard
+  never refreshes an existing volume.</p>
+
+<h3>Prompt 14 — SQLi + XSS attack tests</h3>
+<div class="prompt">
+  "Let's plan for the next feature '- [ ] SQLi + XSS attack tests — OPTIONAL — add SQL-injection and XSS payload cases to the PHPUnit suite to prove the M6 escaping/prepared-statement invariants under attack input.'"
+</div>
+<p>
+  <span class="ok">Outcome:</span> <code>tests/Http/AttackTest.php</code> — SQLi cases prove prepared statements bind
+  literally (search UNION/OR injection leaks nothing, <code>DROP TABLE</code> not executed, add/edit injection stored as
+  literal) and XSS cases prove <code>Response::e()</code> escaping across search reflection, list, detail, edit form, and
+  an   add-then-render round-trip. Verified live too (payload phrases render <code>&amp;lt;script&amp;gt;</code>-escaped, never raw).
+  Footprint: full suite grew to 104 tests.
+</p>
+
+<h3>Prompt 15 — Pagination</h3>
+<div class="prompt">
+  "Let's plan for the next feature '- [ ] Pagination — OPTIONAL — page/per_page on keyword list + position history; index on positions(keyword_id, captured_at) already present.'"
+</div>
+<p>
+  <span class="ok">Outcome:</span> <code>page</code>/<code>per_page</code> on the keyword list (default 20) and the
+  position-history table (default 15). Pagination is a post-filter PHP slice: the list's move/position filters run in
+  PHP (<code>Position::trend</code>), so SQL <code>LIMIT</code> on the filtered set is impossible. A shared
+  <code>partials/pagination.php</code> serves both pages; the detail chart keeps the full history while only the table
+  paginates. Covered by <code>tests/Http/PaginationTest.php</code>.
+</p>
+<p>
+  <span class="bad">Nav iteration (user feedback):</span> the first nav (Prev/Next + 5-number window) let users only
+  page 1-by-1 and lacked bounds, and the 105 count rendered twice (card header + nav). Fix = added <strong>First</strong> /
+  <strong>Last</strong> buttons and a numeric <strong>page-jump form</strong>, and removed the duplicated "N rows" line
+  (count now shown once in the card header). The "collapsed page numbers with clickable ellipsis" pattern was discussed
+  and deferred — current First/Last + jump is "ok for a demo".
+</p>
+
 <h2>3. Retrospective</h2>
 
-<h3>What's going well</h3>
+<h3>What I've done good</h3>
 <ul>
-  <li>Planned <em>before</em> code — matches "plan first" advice, saves free-model quota.</li>
-  <li>Reviewed the scaffold diff as a gate: caught hardcoded DB path + unescaped output (M6) before any data flowed.</li>
-  <li>Verification checked rendered output, not just HTTP 200 — caught the M4 trend-arrow CSS-class mismatch by searching emitted class names.</li>
+  <li>Always planned before writing any code.</li>
+  <li>Always checked the agent's output in the diff/review panel before building on it.</li>
+  <li>Manually clicked through the pages, the features, and the edge cases — didn't just trust a passing test.</li>
+  <li>Updated this process document at the end of every session.</li>
 </ul>
 
-<h3>What I would do differently</h3>
+<h3>What I would change</h3>
 <ul>
-  <li>Add the <code>public/</code> web-root separation and the escaping rule to AGENTS.md <em>before</em> generating the skeleton, so the model doesn't ship them wrong.</li>
-  <li>Write process.html incrementally as I go rather than in drafts.</li>
-  <li>Commit S2 as a grouped payload (schema + models + controllers + views together) to avoid the broken app window between the schema change and the scoping that follows it.</li>
+  <li>Spend more time writing less, more maintainable code and following best practices.</li>
+  <li>Lean further into PHP — it's simple and robust — and go deeper on how each piece actually works.</li>
+  <li>Use an ORM and a proper database (MySQL/Postgres) instead of SQLite.</li>
 </ul>
 
 <h3>Agent logic flaws caught by human review</h3>
 <ul>
-  <li><strong>S6 test-ordering reorder was wrong:</strong> I proposed moving S6 (PHPUnit) before S2/S3 to "avoid rewriting tests."
-      Human pointed out S6 tests target seed-bounds + trend logic, which structurally survive the S2 project restructure — so no rewrite,
-      and the reorder added no value. Reverted my own recommendation.</li>
-  <li><strong>Chart tooltip / upside-down axis</strong> — captured in Prompt 7: native <code>&lt;title&gt;</code> can't satisfy
-      "click a dot", and the axis labels contradicted the plotted data.</li>
-  <li><strong>Refresh CSRF transport</strong> — captured in Prompt 9: JSON body vs <code>$_POST</code> read path mismatch,
-      plus the session-regenerate side effect of re-login on a live probe session.</li>
+  <li>The S6-before-S2/S3 reorder I proposed was pointless — those tests cover logic S2 doesn't touch, so no rewrite was needed. Human caught it; I reverted.</li>
+  <li>The chart axis contradicted the data (labels vs where the line sat), and a native <code>&lt;title&gt;</code> can't be clicked. Both fixed.</li>
+  <li>The refresh CSRF failed because I sent a JSON body but the server read <code>$_POST</code>; and a live-probe session got swapped by re-login. Fixed, probes isolated.</li>
 </ul>
-<p><span class="ok">Lesson:</span> re-check "avoid rewrite" rationales against the actual contracts before acting on them; verify
-  interaction feasibility and label/data agreement before shipping a visualization; match fetch body format to the server read path.</p>
 
 <h3>Effort so far</h3>
 <p class="meta">Approx. hours: <strong>~14h</strong> (requirements, tech decisions, planning docs, agent rules, MVC skeleton,
