@@ -28,14 +28,14 @@
 
 <h1>MiniRank — Process Document</h1>
 <p class="meta">
-  Candidate: <em>MiniRank keyword position tracker</em> · Window: 14.08 – 18.08.2026 · Status: M1–M8 + S1, S4, S5 done; M6 security audited; S3 accounts/CSRF + S2 multi-project built; M7 README + submission pending
+  Candidate: <em>MiniRank keyword position tracker</em> · Window: 14.08 – 18.08.2026 · Status: M1–M8 + S1, S4, S5, S6 done; M6 security audited + hardened; S3 accounts/CSRF + S2 multi-project built; M7 README done submission pending
 </p>
 
 <h2>1. Plan</h2>
 
 <h3>What we're building</h3>
 <p>
-  MiniRank is a single-user full-stack PHP app that tracks simulated keyword positions for one website.
+  MiniRank is a multi-user PHP keyword position tracker that tracks simulated keyword positions per website.
   All ranking data is simulated — no real search engines. It has a keyword list with trends and search,
   a per-keyword history page, a server-side "refresh positions" action delivered over AJAX, and seeded demo
   history covering ~30 days. Escalated to user accounts (register/login/logout, hashed passwords, CSRF) and
@@ -102,27 +102,33 @@
   </tbody>
 </table>
 
-<h3>Planned structure</h3>
+<h3>Structure</h3>
 <pre>
 MiniRank/
 ├── public/                 # DOCUMENT ROOT (only thing web-exposed)
 │   ├── index.php           # front controller (routing)
-│   ├── refresh.php         # M3 AJAX endpoint
+│   ├── refresh.php         # M3 AJAX endpoint (POST-only, CSRF + auth)
 │   ├── css/style.css
-│   └── js/app.js
+│   └── js/app.js           # refresh fetch, chart tooltip
 ├── app/
-│   ├── Controllers/        # KeywordController, PositionController
-│   ├── Models/             # Database, Keyword, Position (all SQL here)
-│   ├── Views/              # layout, keyword/list, keyword/form, keyword/detail
-│   └── Core/               # Router, Request, Response (e()/view()/redirect)
+│   ├── Controllers/        # Keyword, Position, Project, Auth
+│   ├── Models/             # Database, Keyword, Position, Project, User (all SQL here)
+│   ├── Views/              # layout + keyword/, auth/, project/
+│   └── Core/               # Router, Request, Response, Auth, Csrf, Chart
 ├── database/               # schema.sql, seed.php, minirank.db (gitignored)
-├── config/config.php       # DB path + site config (no secrets); read by Database model
-├── tests/                  # optional PHPUnit (S6)
+├── config/config.php       # env-aware loader: defaults ← .env ← env vars
+├── .env.example            # DATABASE_PATH override template (.env gitignored)
+├── tests/                  # PHPUnit (S6)
+│   ├── bootstrap.php
+│   ├── Models/  Core/  Http/
+│   └── Support/            # TestCase, HttpTestCase, RedirectSignal
 ├── README.md               # M7
 ├── process.html            # this file
 ├── AGENTS.md               # auto-loaded rules: voice, modes, code, non-negotiables
 ├── docs/agent-conventions.md  # stack, directory map, coding style
-├── composer.json
+├── composer.json           # phpunit ^11 (dev), autoload-dev for App\Tests
+├── composer.lock
+├── phpunit.xml
 └── .gitignore
 </pre>
 
@@ -166,6 +172,7 @@ MiniRank/
   <li><a href="https://opncd.ai/share/X5snY62n">Planning &amp; requirements analysis</a> — 15.08.2026</li>
   <li><a href="https://opncd.ai/share/vQKMxVQA">Session 2 — M2 seed, M1 CRUD, M4 list/trend/search, M5 detail, M3 refresh AJAX</a> — 16.08.2026</li>
   <li><a href="https://opncd.ai/share/UBBohzRU">Session 3 — S3 accounts/CSRF, S2 multi-project, M6 security audit</a> — 18.08.2026</li>
+  <li><a href="https://opncd.ai/share/BGqXX2AV">Session 4 — M7 README, S6 PHPUnit suite, behavioral fixes</a> — 18.08.2026</li>
 </ul>
 
 <h3>Prompt 1 — Requirements analysis</h3>
@@ -299,6 +306,34 @@ MiniRank/
   <code>php://input</code>), and keep probe sessions isolated from mutations that regenerate the session.
 </p>
 
+<h3>Prompt 10 — PHPUnit suite (S6) + README (M7) + behavioral fixes</h3>
+<div class="prompt">
+  "Add Docker + PHPUnit and the setup README; then harden the bugs found in a code smell pass and wire it into CI."
+</div>
+<p>
+  <span class="ok">Outcome:</span> PHPUnit ^11 suite — security invariants (ownership isolation, CSRF, POST-only
+  mutations), auth flows (login/register/logout), list filters, trend/refresh logic, model edges. Restructured into
+  <code>tests/Models/</code>, <code>tests/Core/</code>, <code>tests/Http/</code> + <code>tests/Support/</code>;
+  composer <code>autoload-dev</code>; <code>.env</code>/<code>DATABASE_PATH</code> override so tests never touch the real DB;
+  a <code>Response::redirect</code> abort seam lets HTTP tests assert redirects instead of hitting <code>exit</code>.
+  README expanded (M7): requirements, macOS/Ubuntu install, seed/run/test.
+</p>
+<p>
+  <span class="bad">Behavioral fixes shipped:</span> trend fallback bounded to the 7-day window (no longer compares against
+  the oldest-ever row); batch refresh wrapped in a transaction (rollback on mid-batch failure); keyword access
+  (<code>findOwned</code>) scoped to the active project across edit/detail/export/delete.
+</p>
+<p>
+  <span class="bad">Mistake 1 — namespace break after restructure:</span> moving tests into sub-namespaces left the
+  <code>catch (RedirectSignal)</code> clauses referencing the now-wrong class, failing the delete tests. Caught by running the suite;
+  fix = explicit <code>use App\Tests\Support\RedirectSignal;</code>.
+</p>
+<p>
+  <span class="bad">Mistake 2 — scope breadth:</span> when adding the optional <code>$projectId</code> to <code>findOwned</code>,
+  it seemed a delete-only change; reading the sibling handlers showed edit/detail/export also fetch by id and needed the same
+  project scope. Fix = scope all four call sites. Lesson: signature changes invite revisiting every call site, not just the one in hand.
+</p>
+
 <h2>3. Retrospective</h2>
 
 <h3>What's going well</h3>
@@ -333,7 +368,7 @@ MiniRank/
   escaping fix, seed, CRUD, list/trend/search, detail, AJAX refresh, Bootstrap/M8, S4 filter, S1 chart, S5 CSV,
   S3 accounts/CSRF, S2 multi-project, M6 security audit).</p>
 
-<p class="meta">Last updated: 18.08.2026 · Phase: M1–M8 + S1, S4, S5, M6 audit, S3 + S2 done; pending M7 README + submission.</p>
+<p class="meta">Last updated: 18.08.2026 · Phase: M1–M8 + S1, S4, S5, S6, M6 audit + hardening, S3 + S2 built, M7 README done; pending submission.</p>
 
 </body>
 </html>
