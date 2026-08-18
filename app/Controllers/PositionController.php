@@ -4,22 +4,26 @@ declare(strict_types=1);
 
 namespace App\Controllers;
 
+use App\Core\Auth;
+use App\Core\Csrf;
 use App\Core\Request;
 use App\Core\Response;
-use App\Core\Csrf;
 use App\Models\Database;
 use App\Models\Keyword;
 use App\Models\Position;
+use App\Models\Project;
 
 class PositionController
 {
     private Keyword $keyword;
     private Position $position;
+    private Project $project;
 
-    public function __construct(?Keyword $keyword = null, ?Position $position = null)
+    public function __construct(?Keyword $keyword = null, ?Position $position = null, ?Project $project = null)
     {
         $this->keyword = $keyword ?? new Keyword(Database::connection());
         $this->position = $position ?? new Position(Database::connection());
+        $this->project = $project ?? new Project(Database::connection());
     }
 
     public function refresh(Request $request): void
@@ -34,8 +38,16 @@ class PositionController
             return;
         }
 
+        $userId = (int) Auth::userId();
+        $projectId = (int) $request->post('project', 0);
+
+        if ($projectId <= 0 || !$this->project->owns($userId, $projectId)) {
+            Response::json(['error' => 'Project not found'], 404);
+            return;
+        }
+
         $results = [];
-        foreach ($this->keyword->ids() as $keyword) {
+        foreach ($this->keyword->idsForUser($userId, $projectId) as $keyword) {
             $results[] = $this->position->refreshForToday((int) $keyword['id']);
         }
 

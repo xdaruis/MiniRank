@@ -7,6 +7,7 @@
     try {
       const body = new FormData();
       body.append('csrf_token', document.querySelector('meta[name="csrf-token"]')?.content || '');
+      body.append('project', btn.dataset.project || '');
       const res = await fetch('refresh.php', { method: 'POST', body });
       const rows = await res.json();
       rows.forEach(({ keyword_id, position, trend }) => {

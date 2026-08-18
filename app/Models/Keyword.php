@@ -10,39 +10,55 @@ class Keyword
     {
     }
 
-    public function all(string $search = ''): array
+    public function all(int $userId, int $projectId, string $search = ''): array
     {
         $sql = 'SELECT k.id, k.phrase, k.created_at,
                        (SELECT p.position FROM positions p
                          WHERE p.keyword_id = k.id
                          ORDER BY p.captured_at DESC, p.id DESC LIMIT 1) AS position
                 FROM keywords k
-                WHERE (:search = \'\' OR lower(k.phrase) LIKE lower(:pattern))
+                JOIN projects pr ON pr.id = k.project_id
+                WHERE pr.user_id = :user_id AND k.project_id = :project_id
+                  AND (:search = \'\' OR lower(k.phrase) LIKE lower(:pattern))
                 ORDER BY k.id';
 
         $stmt = $this->db->prepare($sql);
         $pattern = '%' . $search . '%';
-        $stmt->execute(['search' => $search, 'pattern' => $pattern]);
+        $stmt->execute([
+            'user_id' => $userId,
+            'project_id' => $projectId,
+            'search' => $search,
+            'pattern' => $pattern,
+        ]);
         return $stmt->fetchAll();
     }
 
-    public function ids(): array
+    public function idsForUser(int $userId, int $projectId): array
     {
-        return $this->db->query('SELECT id FROM keywords')->fetchAll();
+        $sql = 'SELECT k.id FROM keywords k
+                JOIN projects pr ON pr.id = k.project_id
+                WHERE pr.user_id = :user_id AND k.project_id = :project_id';
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute(['user_id' => $userId, 'project_id' => $projectId]);
+        return $stmt->fetchAll();
     }
 
-    public function find(int $id): ?array
+    public function findOwned(int $userId, int $id): ?array
     {
-        $stmt = $this->db->prepare('SELECT id, phrase, created_at FROM keywords WHERE id = :id');
-        $stmt->execute(['id' => $id]);
+        $sql = 'SELECT k.id, k.phrase, k.created_at
+                FROM keywords k
+                JOIN projects pr ON pr.id = k.project_id
+                WHERE k.id = :id AND pr.user_id = :user_id';
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute(['id' => $id, 'user_id' => $userId]);
         $row = $stmt->fetch();
         return $row === false ? null : $row;
     }
 
-    public function create(string $phrase): int
+    public function create(int $projectId, string $phrase): int
     {
-        $stmt = $this->db->prepare('INSERT INTO keywords (phrase) VALUES (:phrase)');
-        $stmt->execute(['phrase' => $phrase]);
+        $stmt = $this->db->prepare('INSERT INTO keywords (project_id, phrase) VALUES (:project_id, :phrase)');
+        $stmt->execute(['project_id' => $projectId, 'phrase' => $phrase]);
         return (int) $this->db->lastInsertId();
     }
 

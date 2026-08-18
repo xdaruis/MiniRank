@@ -1,6 +1,6 @@
 <nav aria-label="breadcrumb">
   <ol class="breadcrumb">
-    <li class="breadcrumb-item"><a href="index.php?route=keyword.list">Keywords</a></li>
+    <li class="breadcrumb-item"><a href="index.php?route=keyword.list&project=<?php echo \App\Core\Response::e((string) $projectId); ?>">Keywords</a></li>
     <li class="breadcrumb-item active" aria-current="page"><?php echo \App\Core\Response::e($keyword['phrase']); ?></li>
   </ol>
 </nav>
@@ -10,7 +10,7 @@
   <?php if (!empty($position)): ?>
     <span class="badge text-bg-success fs-6" title="1 = top result">Position <?php echo \App\Core\Response::e((string) $position); ?></span>
   <?php endif; ?>
-  <a class="btn btn-sm btn-outline-secondary ms-auto" href="index.php?route=keyword.export&id=<?php echo \App\Core\Response::e((string) $keyword['id']); ?>">Export CSV</a>
+  <a class="btn btn-sm btn-outline-secondary ms-auto" href="index.php?route=keyword.export&id=<?php echo \App\Core\Response::e((string) $keyword['id']); ?>&project=<?php echo \App\Core\Response::e((string) $projectId); ?>">Export CSV</a>
 </div>
 
 <?php if (empty($history)): ?>

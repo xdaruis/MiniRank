@@ -8,10 +8,20 @@ CREATE TABLE IF NOT EXISTS users (
     created_at    TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
+CREATE TABLE IF NOT EXISTS projects (
+    id         INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id    INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    domain     TEXT NOT NULL,
+    created_at TEXT NOT NULL DEFAULT (datetime('now')),
+    UNIQUE (user_id, domain)
+);
+
 CREATE TABLE IF NOT EXISTS keywords (
     id         INTEGER PRIMARY KEY AUTOINCREMENT,
-    phrase     TEXT NOT NULL UNIQUE,
-    created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    project_id INTEGER NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
+    phrase     TEXT NOT NULL,
+    created_at TEXT NOT NULL DEFAULT (datetime('now')),
+    UNIQUE (project_id, phrase)
 );
 
 CREATE TABLE IF NOT EXISTS positions (
@@ -24,3 +34,6 @@ CREATE TABLE IF NOT EXISTS positions (
 
 CREATE INDEX IF NOT EXISTS idx_positions_keyword_date
     ON positions (keyword_id, captured_at);
+
+CREATE INDEX IF NOT EXISTS idx_keywords_project
+    ON keywords (project_id);
