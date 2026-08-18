@@ -28,6 +28,20 @@ class PositionTest extends TestCase
         $this->assertSame('improved', (new Position($this->pdo))->trend($this->keywordId));
     }
 
+    public function testTrendUsesNearestPriorRowWhenSevenDaysMissing(): void
+    {
+        $this->seedPosition($this->keywordId, 5, date('Y-m-d'));
+        $this->seedPosition($this->keywordId, 9, date('Y-m-d', strtotime('-14 days')));
+        $this->assertSame('improved', (new Position($this->pdo))->trend($this->keywordId));
+    }
+
+    public function testTrendFallsBackToOldestWhenYoungerThanWindow(): void
+    {
+        $this->seedPosition($this->keywordId, 5, date('Y-m-d'));
+        $this->seedPosition($this->keywordId, 9, date('Y-m-d', strtotime('-2 days')));
+        $this->assertSame('improved', (new Position($this->pdo))->trend($this->keywordId));
+    }
+
     public function testTrendDeclinedWhenRankRises(): void
     {
         $this->seedPosition($this->keywordId, 12, date('Y-m-d'));

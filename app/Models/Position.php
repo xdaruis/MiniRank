@@ -37,7 +37,9 @@ class Position
         $todayPosition = $this->positionOn($keywordId, $today, 'DESC');
 
         $stmt = $this->db->prepare(
-            'SELECT position FROM positions WHERE keyword_id = :id AND captured_at = :past LIMIT 1'
+            'SELECT position FROM positions
+             WHERE keyword_id = :id AND captured_at <= :past
+             ORDER BY captured_at DESC, id DESC LIMIT 1'
         );
         $stmt->execute(['id' => $keywordId, 'past' => $past]);
         $pastPosition = $stmt->fetchColumn();
