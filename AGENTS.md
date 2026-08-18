@@ -33,3 +33,22 @@ MiniRank is a single-user PHP keyword position tracker (simulated data). Plain P
 - No secrets committed to the repository.
 - Mutations (add/edit/delete/refresh) are POST, never GET.
 - Small commits, meaningful messages, no squash, no force-push.
+
+## Security audit (M6) — run after every feature
+
+Verify each, fix any failure before committing:
+
+1. Prepared statements — all CRUD via `->prepare() + execute([...])`; SQL lives only in `app/Models/`. Concatenated only allowed for whitelisted (enum) values.
+   `rg -n 'query\(|exec\(|prepare\(' app/Models app/Core app/Controllers`
+   `rg -n '\$sql\s*\.=|\.\s*\$_' app/Models`
+   `rg -n '\$_GET|\$_POST' app/Models`
+2. Escaped output — every DB/request-derived value echoed through `Response::e()`. Static literals + int casts exempt.
+   `rg -n 'echo |<\?=' app/Views --glob '*.php' | rg -v 'Response::e|content\(\)'`
+3. No secrets — no credentials in `config/`; db/env/vendor gitignored.
+   `git ls-files | rg -i '\.db$|\.env$|secret|credential|password'`
+   `git check-ignore database/minirank.db`
+4. Mutations POST + CSRF — every mutating handler guards `isPost()` then `Csrf::verify`. New POST forms include `Csrf::field()`; JSON/POST handlers read `csrf_token`.
+   `rg -n 'isPost\(\)|Csrf::verify' app/Controllers`
+5. Ownership isolation — multi-user scope: any record read/write cross-user must fail (keyword/edit/delete/refresh/detail return 404 or no-op). Verify live per feature.
+
+Live probe checklist (built-in server + curl): SQLi search payload returns 0 rows; POST mutation without `csrf_token` inserts nothing; GET to a delete route removes nothing; cross-account record access 404; reflector username renders escaped (`&lt;`), never raw.

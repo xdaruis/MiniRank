@@ -45,6 +45,6 @@ Ordered top to bottom. `[ ]` unsolved, `[x]` solved. Optional tasks interleaved 
 
 ## Quality + deliverables
 
-- [ ] **M6 Security audit pass** — MAIN — verify every query is prepared, every output escaped, no secrets, all mutations POST. Do after each feature.
+- [x] **M6 Security audit pass** — MAIN — verify every query is prepared, every output escaped, no secrets, all mutations POST. Coveverification encoded in AGENTS.md; live probes passed (SQLi, CSRF, GET-mutation, authz 404, XSS escape).
 - [x] **process.html** — DELIVERABLE — exists with Plan/Prompts/Retrospective; needs final 3 prompts + hours.
 - [ ] **Repo public + submission** — DELIVERABLE — push, make public at deadline, submit repo + session links by email.
