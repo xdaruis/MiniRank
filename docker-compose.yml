@@ -1,0 +1,17 @@
+services:
+  app:
+    build:
+      context: .
+      target: dev
+    image: minirank:dev
+    container_name: minirank-dev
+    ports:
+      - "8000:8000"
+    environment:
+      DATABASE_PATH: /var/www/data/minirank.db
+    volumes:
+      - .:/var/www/html
+      - db_data:/var/www/data
+
+volumes:
+  db_data:

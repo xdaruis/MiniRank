@@ -22,7 +22,7 @@ Ordered top to bottom. `[ ]` unsolved, `[x]` solved. Optional tasks interleaved 
 - [x] **S4 Filter list** — OPTIONAL — filter by position range or movement; slots into list view after M4.
 - [x] **S1 Line chart** — OPTIONAL — hand-rolled inline SVG on detail page, no dependency.
 - [x] **S5 CSV export** — OPTIONAL — export a keyword's position history; endpoint off detail page.
-- [ ] **S7 Docker** — OPTIONAL — `docker compose up` starts app + SQLite; complements M7.
+- [x] **S7 Docker** — OPTIONAL — `docker compose up` starts app + SQLite; complements M7. Done. Single `Dockerfile` (dev/prod targets), dev = bind-mount + built-in server (`docker compose up`, port 8000), prod = nginx + php-fpm + one-shot seed (`docker compose -f docker-compose.prod.yml up`, port 8081), SQLite on named volumes, seed only when DB absent.
 - [x] **S2 Multi-project/websites** — OPTIONAL — adds project entity; restructures M1/M2, largest optional. Done.
   - [x] **S2.1** `schema.sql` — add `users`, `projects`, `keywords.project_id`, `UNIQUE(project_id, phrase)`, `UNIQUE(user_id, domain)`.
   - [x] **S2.2** `app/Models/User.php` — username-based `findByUsername`/`create` (done in S3; email variant not used).

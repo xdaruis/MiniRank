@@ -1,0 +1,9 @@
+services:
+  test:
+    build:
+      context: .
+      target: test
+    image: minirank:test
+    container_name: minirank-test
+    volumes:
+      - .:/var/www/html
