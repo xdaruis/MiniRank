@@ -43,6 +43,25 @@ Ordered top to bottom. `[ ]` unsolved, `[x]` solved. Optional tasks interleaved 
   - [x] **S3.7** `app.js` — send CSRF token in refresh POST body; refresh.php hardened (direct controller call, JSON 401, 403 on bad CSRF).
 - [x] **S6 PHPUnit** — OPTIONAL — `composer.json` (`phpunit ^11`) + `phpunit.xml` + `tests/` split into `Models/`/`Core/`/`Http/` + `Support/` (autoload-dev, `.env` `DATABASE_PATH` override). Covers security invariants (ownership isolation, CSRF, POST-only mutations), auth flows (login/register/logout), list filters, trend/refresh logic, model edges. 65 tests. Done.
 
+## Nice-to-have (OPTIONAL — not required by reviewers)
+
+Only addressed if requested feature work continues. No acceptance impact.
+These are not part of the submission scope.
+
+### Features
+
+- [ ] **Pagination** — OPTIONAL — `page`/`per_page` on keyword list + position history; index on `positions(keyword_id, captured_at)` already present.
+
+### Bugs (from code-smell audit)
+
+- [ ] **Literal search** — escape `%`/`_` in `Keyword::all` pattern so searches are literal, not SQL-wildcard.
+- [ ] **Single source of truth for trend** — consolidate trend glyph/label rendering (currently duplicated in `list.php` backend + `app.js` frontend).
+- [ ] **Refresh error feedback** — surface 403/404/405 to the user instead of silently swallowing (current `app.js` `catch`).
+- [ ] **List N+1** — compute trend once per keyword per render (currently queried in filter + again in view).
+- [ ] **`.env` parser hardening** — strip inline `#` comments/quotes; clarify real-`getenv()` precedence over `.env`.
+- [ ] **Multibyte password length** — `mb_strlen` in register validation (current `strlen` counts bytes).
+- [ ] **Per-request `Auth::user()`** — resolve the user once per request instead of re-querying on each `layout` render.
+
 ## Quality + deliverables
 
 - [x] **M6 Security audit pass** — MAIN — verify every query is prepared, every output escaped, no secrets, all mutations POST. Coveverification encoded in AGENTS.md; live probes passed (SQLi, CSRF, GET-mutation, authz 404, XSS escape). Hardening: `findOwned` project-scoped on edit/detail/export/delete; batch refresh transactional; trend fallback bounded to 7-day window.
