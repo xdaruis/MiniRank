@@ -28,7 +28,7 @@
 
 <h1>MiniRank — Process Document</h1>
 <p class="meta">
-  Candidate: <em>MiniRank keyword position tracker</em> · Window: 14.08 – 18.08.2026 · Status: M1–M5, M8 + S4, S1, S5 done; M6 audit + M7 README pending; S2/S3 planned
+  Candidate: <em>MiniRank keyword position tracker</em> · Window: 14.08 – 18.08.2026 · Status: M1–M8 + S1, S4, S5 done; M6 security audited; S3 accounts/CSRF + S2 multi-project built; M7 README + submission pending
 </p>
 
 <h2>1. Plan</h2>
@@ -38,8 +38,8 @@
   MiniRank is a single-user full-stack PHP app that tracks simulated keyword positions for one website.
   All ranking data is simulated — no real search engines. It has a keyword list with trends and search,
   a per-keyword history page, a server-side "refresh positions" action delivered over AJAX, and seeded demo
-  history covering ~30 days. No login (single user), SQLite database.
-  Planned next: multi-project/websites (S2) + accounts/CSRF (S3) via a User &gt; Project &gt; Keyword model.
+  history covering ~30 days. Escalated to user accounts (register/login/logout, hashed passwords, CSRF) and
+  multi-project/websites (projects &gt; keywords), SQLite database.
 </p>
 
 <h3>Key decisions (and why)</h3>
@@ -144,9 +144,11 @@ MiniRank/
   <li><span class="ok">Done</span> Filter list (S4)</li>
   <li><span class="ok">Done</span> Hand-rolled SVG line chart (S1)</li>
   <li><span class="ok">Done</span> CSV export (S5)</li>
-  <li>M6 security audit pass</li>
+  <li><span class="ok">Done</span> Accounts + CSRF (S3) — built first; S2 depends on Auth/Csrf</li>
+  <li><span class="ok">Done</span> Multi-project/websites (S2) — users &gt; projects &gt; keywords</li>
+  <li><span class="ok">Done</span> Security audit (M6) — codified verification checklist into AGENTS.md</li>
   <li>README (M7)</li>
-  <li>Stretch: multi-project (S2) + accounts/CSRF (S3) planned next; PHPUnit (S6), Docker (S7)</li>
+  <li>Stretch: PHPUnit (S6), Docker (S7)</li>
   <li>This process document + session links + make repo public</li>
 </ol>
 
@@ -163,6 +165,7 @@ MiniRank/
 <ul>
   <li><a href="https://opncd.ai/share/X5snY62n">Planning &amp; requirements analysis</a> — 15.08.2026</li>
   <li><a href="https://opncd.ai/share/vQKMxVQA">Session 2 — M2 seed, M1 CRUD, M4 list/trend/search, M5 detail, M3 refresh AJAX</a> — 16.08.2026</li>
+  <li><a href="https://opncd.ai/share/UBBohzRU">Session 3 — S3 accounts/CSRF, S2 multi-project, M6 security audit</a> — 18.08.2026</li>
 </ul>
 
 <h3>Prompt 1 — Requirements analysis</h3>
@@ -274,6 +277,28 @@ MiniRank/
   silently never rendered.
 </p>
 
+<h3>Prompt 9 — Refresh CSRF transport <span class="bad">(JSON body ignored — caught)</span></h3>
+<div class="prompt">
+  "Send the CSRF token with the refresh POST and enforce it on the endpoint."
+</div>
+<p>
+  <span class="bad">Mistake:</span> <code>app.js</code> posted a <em>JSON</em> body; <code>PositionController::refresh</code>
+  read <code>$_POST</code> (<code>Csrf::verify(post('csrf_token'))</code>), so the token never arrived and every refresh was rejected.
+  JSON request bodies do not populate <code>$_POST</code>.
+</p>
+<p>
+  <span class="ok">How caught:</span> live-probe POST returned HTTP 403 <code>Invalid CSRF token</code> — the guard proved the handler
+  saw an empty token. <span class="ok">Fix:</span> switched to a <code>FormData</code> POST field + a
+  <code>&lt;meta name="csrf-token"&gt;</code> consumed by JS.
+</p>
+<p>
+  <span class="bad">Adjacent gotcha:</span> a logged-in session POSTing to <code>auth.register</code> runs <code>Auth::login()</code>,
+  which <code>session_regenerate_id(true)</code>s and rewrites the acting session — during audit probes this silently swapped the
+  "demo" session to the new user. Kept test sessions on separate cookie jars from then on.
+  <span class="ok">Lesson:</span> match the fetch body format to the server read path (<code>$_POST</code> vs
+  <code>php://input</code>), and keep probe sessions isolated from mutations that regenerate the session.
+</p>
+
 <h2>3. Retrospective</h2>
 
 <h3>What's going well</h3>
@@ -287,6 +312,7 @@ MiniRank/
 <ul>
   <li>Add the <code>public/</code> web-root separation and the escaping rule to AGENTS.md <em>before</em> generating the skeleton, so the model doesn't ship them wrong.</li>
   <li>Write process.html incrementally as I go rather than in drafts.</li>
+  <li>Commit S2 as a grouped payload (schema + models + controllers + views together) to avoid the broken app window between the schema change and the scoping that follows it.</li>
 </ul>
 
 <h3>Agent logic flaws caught by human review</h3>
@@ -296,15 +322,18 @@ MiniRank/
       and the reorder added no value. Reverted my own recommendation.</li>
   <li><strong>Chart tooltip / upside-down axis</strong> — captured in Prompt 7: native <code>&lt;title&gt;</code> can't satisfy
       "click a dot", and the axis labels contradicted the plotted data.</li>
+  <li><strong>Refresh CSRF transport</strong> — captured in Prompt 9: JSON body vs <code>$_POST</code> read path mismatch,
+      plus the session-regenerate side effect of re-login on a live probe session.</li>
 </ul>
 <p><span class="ok">Lesson:</span> re-check "avoid rewrite" rationales against the actual contracts before acting on them; verify
-  interaction feasibility and label/data agreement before shipping a visualization.</p>
+  interaction feasibility and label/data agreement before shipping a visualization; match fetch body format to the server read path.</p>
 
 <h3>Effort so far</h3>
-<p class="meta">Approx. hours: <strong>~9–10h</strong> (requirements, tech decisions, planning docs, agent rules, MVC skeleton,
-  escaping fix, seed, CRUD, list/trend/search, detail, AJAX refresh, Bootstrap/M8, S4 filter, S1 chart, S5 CSV, S2/S3 planning).</p>
+<p class="meta">Approx. hours: <strong>~12h</strong> (requirements, tech decisions, planning docs, agent rules, MVC skeleton,
+  escaping fix, seed, CRUD, list/trend/search, detail, AJAX refresh, Bootstrap/M8, S4 filter, S1 chart, S5 CSV,
+  S3 accounts/CSRF, S2 multi-project, M6 security audit).</p>
 
-<p class="meta">Last updated: 17.08.2026 · Phase: M1–M5, M8 + S4, S1, S5 done; M6 + M7 pending; next is S2 multi-project + S3 accounts/CSRF.</p>
+<p class="meta">Last updated: 18.08.2026 · Phase: M1–M8 + S1, S4, S5, M6 audit, S3 + S2 done; pending M7 README + submission.</p>
 
 </body>
 </html>
