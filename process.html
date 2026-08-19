@@ -181,9 +181,7 @@ MiniRank/
 
 <h3>What I would change in hindsight</h3>
 <p>
-  Early in the brief I assumed a flat file layout; restructuring to MVC during planning was cheap (no code written yet).
-  Lesson applied: settle the directory structure <em>before</em> any implementation, so later commits don't churn paths.
-  Also: seeded the data (M2) <em>before</em> the CRUD (M1), so the list and detail pages had real rows to render from the start.
+  I enjoyed PHP's simplicity — things worked out of the box with far less ceremony than Node.js. Given how that felt and with hindsight on the time available, I would have used a proper framework (Symfony or Laravel) instead of hand-rolling the MVC. I stayed plain-PHP to keep the footprint small for the free models, but a framework would have handed me structure, escaping, and routing best-practices already done.
 </p>
 
 <h2>2. Prompts &amp; fixes</h2>
@@ -286,11 +284,11 @@ MiniRank/
 <p>
   <span class="bad">Mistake A — chart upside down:</span> the line plotted position 1 (best) at the <em>top</em>, but the axis
   labels annotated the top with the <em>highest</em> number (100) and the bottom with 1 — labels contradicted the data, so it read
-  upside down. Human caught it; fix = swap edge labels + invert the gridline formula so labels run 1 (top) → 100 (bottom).
+  upside down. I caught it; fix = swap edge labels + invert the gridline formula so labels run 1 (top) → 100 (bottom).
 </p>
 <p>
   <span class="bad">Mistake B — tooltip could not be clicked:</span> first used a native SVG <code>&lt;title&gt;</code>, which
-  browsers show only on <em>hover</em>, never on click. Human pushed back twice. Fix = verify hit-testing, then switch to per-circle
+  browsers show only on <em>hover</em>, never on click. I rejected that approach twice and had it switch to per-circle
   <code>data-</code> attrs + an <code>app.js</code> click tooltip. Iterated again for mobile: transparent hit circles, snap-to-nearest tap,
   flip-below near top, horizontal clamp.
 </p>
@@ -468,9 +466,9 @@ MiniRank/
   <li>Use an ORM and a proper database (MySQL/Postgres) instead of SQLite.</li>
 </ul>
 
-<h3>Agent logic flaws caught by human review</h3>
+<h3>Agent mistakes I caught</h3>
 <ul>
-  <li>The S6-before-S2/S3 reorder I proposed was pointless — those tests cover logic S2 doesn't touch, so no rewrite was needed. Human caught it; I reverted.</li>
+  <li>The agent suggested moving S6 (PHPUnit) before S2/S3 to "avoid rewriting the tests." I looked at what the tests actually cover — seed bounds and trend logic, which S2's restructure doesn't touch — so no rewrite was ever needed. I kept the original order.</li>
   <li>The chart axis contradicted the data (labels vs where the line sat), and a native <code>&lt;title&gt;</code> can't be clicked. Both fixed.</li>
   <li>The refresh CSRF failed because I sent a JSON body but the server read <code>$_POST</code>; and a live-probe session got swapped by re-login. Fixed, probes isolated.</li>
 </ul>
