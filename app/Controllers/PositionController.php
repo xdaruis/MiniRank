@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\Controllers;
 
 use App\Core\Auth;
-use App\Core\Csrf;
 use App\Core\Request;
 use App\Core\Response;
 use App\Models\Database;
@@ -33,7 +32,7 @@ class PositionController
             return;
         }
 
-        if (!Csrf::verify((string) $request->post('csrf_token', ''))) {
+        if (!$request->validCsrf()) {
             Response::json(['error' => 'Invalid CSRF token'], 403);
             return;
         }

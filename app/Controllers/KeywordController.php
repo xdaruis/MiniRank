@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\Controllers;
 
 use App\Core\Auth;
-use App\Core\Csrf;
 use App\Core\Request;
 use App\Core\Response;
 use App\Models\Database;
@@ -153,7 +152,7 @@ class KeywordController
         $project = $ctx['project'];
 
         if ($request->isPost()) {
-            if (!Csrf::verify((string) $request->post('csrf_token', ''))) {
+            if (!$request->validCsrf()) {
                 Response::redirect('index.php?route=keyword.list&project=' . $project['id']);
                 return;
             }
@@ -209,7 +208,7 @@ class KeywordController
         }
 
         if ($request->isPost()) {
-            if (!Csrf::verify((string) $request->post('csrf_token', ''))) {
+            if (!$request->validCsrf()) {
                 Response::redirect('index.php?route=keyword.list&project=' . $project['id']);
                 return;
             }
@@ -259,7 +258,7 @@ class KeywordController
         $project = $ctx['project'];
         $id = (int) $request->query('id');
 
-        if ($request->isPost() && Csrf::verify((string) $request->post('csrf_token', ''))) {
+        if ($request->isPost() && $request->validCsrf()) {
             $postId = (int) $request->post('id');
             if ($this->keyword->findOwned($this->userId(), $postId, (int) $project['id']) !== null) {
                 $this->keyword->delete($postId);

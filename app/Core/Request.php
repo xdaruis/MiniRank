@@ -30,4 +30,9 @@ class Request
     {
         return $_POST;
     }
+
+    public function validCsrf(): bool
+    {
+        return Csrf::verify((string) $this->post('csrf_token', ''));
+    }
 }

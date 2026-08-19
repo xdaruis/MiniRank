@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\Controllers;
 
 use App\Core\Auth;
-use App\Core\Csrf;
 use App\Core\Request;
 use App\Core\Response;
 use App\Models\Database;
@@ -23,7 +22,7 @@ class AuthController
     public function login(Request $request): void
     {
         if ($request->isPost()) {
-            if (!Csrf::verify((string) $request->post('csrf_token', ''))) {
+            if (!$request->validCsrf()) {
                 Response::view('layout', ['content' => fn () => Response::view('auth/login', ['error' => 'Session expired. Try again.'])]);
                 return;
             }
@@ -49,7 +48,7 @@ class AuthController
     public function register(Request $request): void
     {
         if ($request->isPost()) {
-            if (!Csrf::verify((string) $request->post('csrf_token', ''))) {
+            if (!$request->validCsrf()) {
                 Response::view('layout', ['content' => fn () => Response::view('auth/register', ['error' => 'Session expired. Try again.'])]);
                 return;
             }
@@ -87,7 +86,7 @@ class AuthController
 
     public function logout(Request $request): void
     {
-        if ($request->isPost() && Csrf::verify((string) $request->post('csrf_token', ''))) {
+        if ($request->isPost() && $request->validCsrf()) {
             Auth::logout();
         }
         Response::redirect('index.php?route=auth.login');

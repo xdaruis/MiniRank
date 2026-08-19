@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\Controllers;
 
 use App\Core\Auth;
-use App\Core\Csrf;
 use App\Core\Request;
 use App\Core\Response;
 use App\Models\Database;
@@ -23,7 +22,7 @@ class ProjectController
     public function add(Request $request): void
     {
         if ($request->isPost()) {
-            if (!Csrf::verify((string) $request->post('csrf_token', ''))) {
+            if (!$request->validCsrf()) {
                 Response::redirect('index.php?route=keyword.list');
                 return;
             }
