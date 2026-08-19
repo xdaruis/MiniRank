@@ -22,6 +22,8 @@ Pick the self-run path if PHP is already installed, or Docker to avoid installin
 - [PHP](https://www.php.net/) >= 8.2 with `pdo_sqlite` (`sqlite3` / `pdo_sqlite` / `mbstring` extensions)
 - [Composer](https://getcomposer.org/) — required only to run the test suite
 
+**Troubleshooting note:** the PHP/Composer install commands below reflect the current official packages for each OS. If any command fails (renamed package, changed installer, PATH issue), consult the official documentation for PHP (`php.net/install`), Composer (`getcomposer.org/download`), or your package manager before continuing — the versions move faster than this README.
+
 ### macOS (Homebrew)
 
 ```sh
@@ -45,6 +47,13 @@ php -m | grep -i sqlite
 ```
 
 PHPUnit is a dev dependency of this project — `composer install` fetches it. No separate PHPUnit install is needed.
+
+### Windows (XAMPP or winget)
+
+- XAMPP (recommended) bundles PHP 8.2+ with `pdo_sqlite`, `sqlite3`, `mbstring`. Install from apachefriends.org; or `winget install PHP.PHP` for a bare binary.
+- Ensure `php.exe` is on PATH — open a fresh terminal and run `php -v`.
+- `php -m | findstr sqlite`  → expect `pdo_sqlite`, `sqlite3`, `mbstring`.
+- Composer: `winget install Composer.Composer` (tests only).
 
 ### Setup (from the repo root)
 
